@@ -87,15 +87,10 @@
                 {
                     case BABYLON.PointerEventTypes.POINTERDOWN:
                     {
-                        // let normal = pointerInfo.pickInfo.getNormal();
-                        let normal = pointerInfo.pickInfo.pickedMesh.getFacetNormal(pointerInfo.pickInfo.faceId);
-                        
-                        // let camDirection = pointerInfo.pickInfo.ray.direction;
-                        // var rotation = BABYLON.Quaternion.RotationAxis(BABYLON.Vector3.Up(), 3.12/2 );
-                        // camDirection.rotateByQuaternionToRef(rotation, camDirection);
-
-                        if (head && normal)
+                        const pickInfo = pointerInfo.pickInfo;
+                        if (pickInfo.hit)
                         {
+                            let normal = pickInfo.pickedMesh.getFacetNormal(pickInfo.faceId);
                             const slapForce = -1.5;
                             head.physicsImpostor.applyImpulse(new BABYLON.Vector3(normal.x * slapForce, normal.y * slapForce, normal.z * slapForce), head.getAbsolutePosition());
                         }
