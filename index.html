@@ -62,7 +62,7 @@
                 head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.9}, scene);
 
                 let floor = BABYLON.Mesh.CreateBox("floor", 1, scene);
-                floor.scaling = new BABYLON.Vector3(10,1,10);
+                floor.scaling = new BABYLON.Vector3(10, 1, 10);
                 floor.physicsImpostor = new BABYLON.PhysicsImpostor(floor, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9}, scene);
 
                 let distanceJoint = new BABYLON.DistanceJoint({ maxDistance: -0.2, collision:false });
@@ -71,12 +71,14 @@
                 // friction
                 scene.onBeforeRenderObservable.add(function()
                 {
-                    head.physicsImpostor.setAngularVelocity(head.physicsImpostor.getAngularVelocity().scale(.99));
+                    head.physicsImpostor.setAngularVelocity(head.physicsImpostor.getAngularVelocity().scale(.97));
                 });
+
             });
 
-            camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2.5, 4, new BABYLON.Vector3(0, 1, 0));
+            camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2, 3, new BABYLON.Vector3(0, 1, 0));
             // camera.attachControl(canvas, true);
+            camera.lockedTarget = head;
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0));
             light.intensity = 0.7;
@@ -91,7 +93,7 @@
                         if (pickInfo.hit)
                         {
                             let normal = pickInfo.pickedMesh.getFacetNormal(pickInfo.faceId);
-                            const slapForce = -1.5;
+                            const slapForce = -0.9;
                             head.physicsImpostor.applyImpulse(new BABYLON.Vector3(normal.x * slapForce, normal.y * slapForce, normal.z * slapForce), head.getAbsolutePosition());
                         }
 
