@@ -36,29 +36,34 @@
             let head = null;
             let camera = null;
             await Ammo();
+            
+            // gravity up
             scene.enablePhysics(new BABYLON.Vector3(0, 9, 0), new BABYLON.AmmoJSPlugin());
+
+            scene.shadowsEnabled = true;
+
+            // camera
+            camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2, 3, new BABYLON.Vector3(0, 1.8, -1.65));
+            camera.setPosition(new BABYLON.Vector3(0, 2, 2));
+            camera.attachControl(canvas, true);
+
+            // light
+            const light = new BABYLON.DirectionalLight("light", new BABYLON.Vector3(0, -1, -0.5), scene);
+            light.position = new BABYLON.Vector3(0, 3, -2);
+            light.intensity = 0.7;
+
+            // Shadows
+            var shadowGenerator = new BABYLON.ShadowGenerator(1024, light);
+            shadowGenerator.useBlurCloseExponentialShadowMap = true;
+            shadowGenerator.forceBackFacesOnly = true;
+            shadowGenerator.blurKernel = 32;
+            shadowGenerator.useKernelBlur = true;
 
             BABYLON.SceneLoader.ImportMesh("", "./assets/", "head.obj", scene, function (meshes) 
             {
-                // head.forceSharedVertices();
-
-                // var softBoxOptions = {
-                //     mass: 15,
-                //     friction: 0.9,
-                //     restitution: 0.3,
-                //     pressure: 2,
-                //     velocityIterations: 10, 
-                //     positionIterations: 10,
-                //     stiffness: 1,
-                //     damping: 0.1
-                // }
-
-                // head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.SoftbodyImpostor, softBoxOptions, scene);
-
                 head = meshes[0];
                 head.checkCollisions = true;
-                head.material = new BABYLON.StandardMaterial("headMat", scene);
-                head.material.diffuseColor = new BABYLON.Color3(1, 0, 0);
+                
                 head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.9}, scene);
 
                 let floor = BABYLON.Mesh.CreateBox("floor", 1, scene);
@@ -68,6 +73,13 @@
                 let distanceJoint = new BABYLON.DistanceJoint({ maxDistance: -0.2, collision:false });
                 floor.physicsImpostor.addJoint(head.physicsImpostor, distanceJoint);
 
+                light.shadowMinZ = 1;
+                light.shadowMaxZ = 6;
+
+                // self shadow
+                shadowGenerator.getShadowMap().renderList.push(head);
+                head.receiveShadows = true;
+
                 // friction
                 scene.onBeforeRenderObservable.add(function()
                 {
@@ -76,13 +88,7 @@
 
             });
 
-            camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2, 3, new BABYLON.Vector3(0, 1, 0));
-            // camera.attachControl(canvas, true);
-            camera.lockedTarget = head;
-
-            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0));
-            light.intensity = 0.7;
-
+            // click
             scene.onPointerObservable.add((pointerInfo) => 
             {
                 switch (pointerInfo.type) 
@@ -102,9 +108,8 @@
                 }
             });
 
-            let lines = null;
-            
             // mouse move
+            let lines = null;
             document.addEventListener("pointermove", function () {
                 
                 if (lines)
