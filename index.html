@@ -28,7 +28,7 @@
     <canvas id="renderCanvas" touch-action="none"></canvas>
     <script>
         
-        function createSpring(point1, point2, scene, springRadius, springSteps)
+        function createSpring(point1, point2, scene, springRadius, springSteps, springThicknes)
         {
             let path = [];
             let xStepSize = point1.x - point2.x / springSteps;
@@ -48,7 +48,7 @@
                 path.push(new BABYLON.Vector3(x, y, z));
             }
 
-            const spring = BABYLON.MeshBuilder.CreateTube(null, {path: path, radius: 0.005, sideOrientation: BABYLON.Mesh.DOUBLESIDE, updatable: true}, scene);
+            const spring = BABYLON.MeshBuilder.CreateTube(null, {path: path, radius: springThicknes, sideOrientation: BABYLON.Mesh.DOUBLESIDE, updatable: true}, scene);
             spring.collision = false;
             return spring;
         }
@@ -72,13 +72,13 @@
 
             // camera
             const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2, 3, new BABYLON.Vector3(0, 0, -3.65));
-            camera.setPosition(new BABYLON.Vector3(0, 2, 2));
+            camera.setPosition(new BABYLON.Vector3(0, 6, 6));
             // camera.attachControl(canvas, true);  // rotate with mouse down
 
             // light
-            const light = new BABYLON.SpotLight("light", new BABYLON.Vector3(0, 4, 0.3), new BABYLON.Vector3(0, -1, 0.2), Math.PI / 3, 5, scene);
+            const light = new BABYLON.SpotLight("light", new BABYLON.Vector3(0, 7, 2), new BABYLON.Vector3(0, -1, -0.3), Math.PI / 3, 5, scene);
             light.light = 10;
-            light.range = 25;
+            light.range = 250;
             light.shadowMinZ = 0.1;
             light.shadowMaxZ = 6;
             light.intensity = 0.5;
@@ -95,32 +95,18 @@
 
             let floor = BABYLON.Mesh.CreateBox("floor", 1, scene);
             floor.collision = false;
-            floor.scaling = new BABYLON.Vector3(10, 1, 10);
+            floor.scaling = new BABYLON.Vector3(100, 1, 100);
             floor.material = floorMaterial;
             shadowGenerator.getShadowMap().renderList.push(floor);
             floor.receiveShadows = true;
 
-            // head
-            BABYLON.SceneLoader.ImportMesh(null, "./assets/", "head.obj", scene, function (meshes) 
+            // head & music box
+            BABYLON.SceneLoader.ImportMesh(null, "./assets/", "headBox.obj", scene, function (meshes) 
             {
-                head = meshes[0];
-                head.collision = false;
-                head.position = new BABYLON.Vector3(0, 1, 0);
-                
-                // self shadow
-                shadowGenerator.getShadowMap().renderList.push(head);
-                head.receiveShadows = true;
-
-            });
-
-            // music box
-            BABYLON.SceneLoader.ImportMesh(null, "./assets/", "box.obj", scene, function (meshes) 
-            {
-                musicBox = meshes[0];
+                musicBox = meshes[1];
                 musicBox.collision = false;
-                musicBox.position = new BABYLON.Vector3(0, 0.7, 0);
-                musicBox.scaling = new BABYLON.Vector3(0.2, 0.2, 0.2);
-                musicBox.rotation = new BABYLON.Vector3(0, -Math.PI / 3, 0);
+                musicBox.position = new BABYLON.Vector3(0, 1.55, 0);
+                musicBox.rotation = new BABYLON.Vector3(0, -Math.PI / 2.5, 0);
 
                 var musicBoxMaterial = new BABYLON.StandardMaterial("musicBoxMaterial", scene);
                 musicBoxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
@@ -128,7 +114,18 @@
 
                 shadowGenerator.getShadowMap().renderList.push(musicBox);
                 musicBox.receiveShadows = true;
+
+                head = meshes[0];
+                head.collision = false;
+                head.position = new BABYLON.Vector3(0, 1, 0);
+                head.rotation = new BABYLON.Vector3(0, -Math.PI / 2.5, 0);
+                
+                // self shadow
+                shadowGenerator.getShadowMap().renderList.push(head);
+                head.receiveShadows = true;
+
             });
+
 
             let springMesh = null;
             scene.executeWhenReady(() =>
@@ -148,7 +145,7 @@
                     }
                     if (musicBox && head)
                     {
-                        springMesh = createSpring(musicBox.getAbsolutePosition(), head.getAbsolutePosition(), scene, 0.02, 200);
+                        springMesh = createSpring(musicBox.getAbsolutePosition(), head.getAbsolutePosition(), scene, 0.1, 200, 0.02);
                     }
 
                     // reduction
