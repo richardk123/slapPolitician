@@ -31,15 +31,17 @@
         function createSpring(point1, point2, scene, springRadius, springSteps)
         {
             let path = [];
-            let stepSize = BABYLON.Vector3.Distance(point1, point2) / springSteps;
+            let xStepSize = point1.x - point2.x / springSteps;
+            let yStepSize = Math.abs(point1.y - point2.y) / springSteps;
+            let zStepSize = point1.z - point2.z / springSteps;
             let angle = 0;
 
             for (step = 0; step < springSteps; step++)
             {
                 const radians = angle * (Math.PI/180);
-                const y = point1.y + stepSize * step;
-                const x = point1.x + Math.sin(radians) * springRadius;
-                const z = point1.z + Math.cos(radians) * springRadius;
+                const x = point1.x + (xStepSize * step) + Math.sin(radians) * springRadius;
+                const y = point1.y + (yStepSize * step);
+                const z = point1.z + (zStepSize * step) + Math.cos(radians) * springRadius;
 
                 angle +=40;
 
@@ -67,7 +69,7 @@
             scene.clearColor = new BABYLON.Color3(0, 0, 0);
             scene.debugLayer.show(); // debug
             scene.shadowsEnabled = true;
-            scene.enablePhysics(new BABYLON.Vector3(0, 9, 0), new BABYLON.AmmoJSPlugin()); // gravity up
+            scene.enablePhysics(new BABYLON.Vector3(0, -9, 0), new BABYLON.AmmoJSPlugin()); // gravity up
 
             // camera
             camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2, 3, new BABYLON.Vector3(0, 0, -3.65));
@@ -99,6 +101,7 @@
             shadowGenerator.getShadowMap().renderList.push(floor);
             floor.receiveShadows = true;
 
+            // head
             BABYLON.SceneLoader.ImportMesh(null, "./assets/", "head.obj", scene, function (meshes) 
             {
                 head = meshes[0];
@@ -111,6 +114,7 @@
 
             });
 
+            // music box
             BABYLON.SceneLoader.ImportMesh(null, "./assets/", "box.obj", scene, function (meshes) 
             {
                 musicBox = meshes[0];
@@ -127,7 +131,36 @@
                 musicBox.receiveShadows = true;
             });
 
-            // click
+            let springMesh = null;
+            scene.executeWhenReady(() =>
+            {
+                // create spring
+                head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.9 }, scene);
+                musicBox.physicsImpostor = new BABYLON.PhysicsImpostor(musicBox, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+
+                let distanceJoint = new BABYLON.DistanceJoint({ maxDistance: 1, collision: false});
+                musicBox.physicsImpostor.addJoint(head.physicsImpostor, distanceJoint);
+
+                scene.onBeforeRenderObservable.add(function()
+                {
+                    if (springMesh)
+                    {
+                        springMesh.dispose();
+                    }
+                    if (musicBox && head)
+                    {
+                        springMesh = createSpring(musicBox.getAbsolutePosition(), head.getAbsolutePosition(), scene, 0.02, 200);
+                    }
+
+                    // reduction
+                    const reduction = .99;
+                    let reducedVelocity = head.physicsImpostor.getAngularVelocity().scale(reduction);
+                    head.physicsImpostor.setAngularVelocity(reducedVelocity);
+                });
+            });
+
+
+            // mouse click
             scene.onPointerObservable.add((pointerInfo) => 
             {
                 switch (pointerInfo.type) 
@@ -139,39 +172,13 @@
                         if (pickInfo.hit)
                         {
                             let normal = pickInfo.pickedMesh.getFacetNormal(pickInfo.faceId);
-                            const slapForce = -0.4;
+                            const slapForce = 0.8;
                             head.physicsImpostor.applyImpulse(new BABYLON.Vector3(normal.x * slapForce, normal.y * slapForce, normal.z * slapForce), head.getAbsolutePosition());
                         }
 
                         break;
                     }
                 }
-            });
-
-            let springMesh = null;
-            scene.executeWhenReady(() =>
-            {
-                // create spring
-                head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.9 }, scene);
-                musicBox.physicsImpostor = new BABYLON.PhysicsImpostor(musicBox, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
-
-                let distanceJoint = new BABYLON.DistanceJoint({ maxDistance: -0.2, collision: false});
-                musicBox.physicsImpostor.addJoint(head.physicsImpostor, distanceJoint);
-
-                // friction
-                scene.onBeforeRenderObservable.add(function()
-                {
-                    head.physicsImpostor.setAngularVelocity(head.physicsImpostor.getAngularVelocity().scale(.97));
-
-                    if (springMesh)
-                    {
-                        springMesh.dispose();
-                    }
-                    if (musicBox && head)
-                    {
-                        springMesh = createSpring(musicBox.getAbsolutePosition(), head.getAbsolutePosition(), scene, 0.05, 100);
-                    }
-                });
             });
 
             // mouse move
