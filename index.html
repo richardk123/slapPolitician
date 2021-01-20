@@ -31,17 +31,17 @@
         function createSpring(point1, point2, scene, springRadius, springSteps, springThicknes)
         {
             let path = [];
-            let xStepSize = point1.x - point2.x / springSteps;
-            let yStepSize = Math.abs(point1.y - point2.y) / springSteps;
-            let zStepSize = point1.z - point2.z / springSteps;
+            let xStepSize = (point1.x - point2.x) / springSteps;
+            let yStepSize = (point1.y - point2.y) / springSteps;
+            let zStepSize = (point1.z - point2.z) / springSteps;
             let angle = 0;
 
             for (step = 0; step < springSteps; step++)
             {
                 const radians = angle * (Math.PI/180);
-                const x = point1.x + (xStepSize * step) + Math.sin(radians) * springRadius;
-                const y = point1.y + (yStepSize * step);
-                const z = point1.z + (zStepSize * step) + Math.cos(radians) * springRadius;
+                const x = point1.x - (xStepSize * step) + Math.sin(radians) * springRadius;
+                const y = point1.y - (yStepSize * step);
+                const z = point1.z - (zStepSize * step) + Math.cos(radians) * springRadius;
 
                 angle +=40;
 
@@ -68,12 +68,12 @@
             scene.clearColor = new BABYLON.Color3(0, 0, 0);
             scene.debugLayer.show(); // debug
             scene.shadowsEnabled = true;
-            scene.enablePhysics(new BABYLON.Vector3(0, -9, 0), new BABYLON.AmmoJSPlugin()); // gravity up
+            scene.enablePhysics(new BABYLON.Vector3(0, 9, 0), new BABYLON.AmmoJSPlugin()); // gravity up
 
             // camera
-            const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2, 3, new BABYLON.Vector3(0, 0, -3.65));
+            const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2, 3, new BABYLON.Vector3(0, 1, 0));
             camera.setPosition(new BABYLON.Vector3(0, 6, 6));
-            // camera.attachControl(canvas, true);  // rotate with mouse down
+            camera.attachControl(canvas, true);  // rotate with mouse down
 
             // light
             const light = new BABYLON.SpotLight("light", new BABYLON.Vector3(0, 7, 2), new BABYLON.Vector3(0, -1, -0.3), Math.PI / 3, 5, scene);
@@ -101,31 +101,31 @@
             floor.receiveShadows = true;
 
             // head & music box
-            BABYLON.SceneLoader.ImportMesh(null, "./assets/", "headBox.obj", scene, function (meshes) 
-            {
-                musicBox = meshes[1];
-                musicBox.collision = false;
-                musicBox.position = new BABYLON.Vector3(0, 1.55, 0);
-                musicBox.rotation = new BABYLON.Vector3(0, -Math.PI / 2.5, 0);
+            // BABYLON.SceneLoader.ImportMesh(null, "./assets/", "headBox.obj", scene, function (meshes) 
+            // {
 
-                var musicBoxMaterial = new BABYLON.StandardMaterial("musicBoxMaterial", scene);
-                musicBoxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
-                musicBox.material = musicBoxMaterial;
+            // });
 
-                shadowGenerator.getShadowMap().renderList.push(musicBox);
-                musicBox.receiveShadows = true;
+            musicBox = BABYLON.Mesh.CreateBox("1", 1, scene);
+            musicBox.collision = false;
+            musicBox.position = new BABYLON.Vector3(0, 1.1, 0);
+            // musicBox.rotation = new BABYLON.Vector3(0, -Math.PI / 2.5, 0);
 
-                head = meshes[0];
-                head.collision = false;
-                head.position = new BABYLON.Vector3(0, 1, 0);
-                head.rotation = new BABYLON.Vector3(0, -Math.PI / 2.5, 0);
-                
-                // self shadow
-                shadowGenerator.getShadowMap().renderList.push(head);
-                head.receiveShadows = true;
+            var musicBoxMaterial = new BABYLON.StandardMaterial("musicBoxMaterial", scene);
+            musicBoxMaterial.emissiveColor = new BABYLON.Color3(1, 0, 0);
+            musicBox.material = musicBoxMaterial;
 
-            });
+            shadowGenerator.getShadowMap().renderList.push(musicBox);
+            musicBox.receiveShadows = true;
 
+            head = BABYLON.MeshBuilder.CreateSphere("sphere", {});
+            head.collision = false;
+            head.position = new BABYLON.Vector3(0, 2, 0);
+            // head.rotation = new BABYLON.Vector3(0, -Math.PI / 2.5, 0);
+            
+            // self shadow
+            shadowGenerator.getShadowMap().renderList.push(head);
+            head.receiveShadows = true;
 
             let springMesh = null;
             scene.executeWhenReady(() =>
@@ -134,7 +134,7 @@
                 head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.9 }, scene);
                 musicBox.physicsImpostor = new BABYLON.PhysicsImpostor(musicBox, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
 
-                let distanceJoint = new BABYLON.DistanceJoint({ maxDistance: 1, collision: false});
+                let distanceJoint = new BABYLON.DistanceJoint({ maxDistance: -2, collision: false});
                 musicBox.physicsImpostor.addJoint(head.physicsImpostor, distanceJoint);
 
                 scene.onBeforeRenderObservable.add(function()
@@ -149,9 +149,9 @@
                     }
 
                     // reduction
-                    const reduction = .99;
-                    let reducedVelocity = head.physicsImpostor.getAngularVelocity().scale(reduction);
-                    head.physicsImpostor.setAngularVelocity(reducedVelocity);
+                    // const reduction = .99;
+                    // let reducedVelocity = head.physicsImpostor.getAngularVelocity().scale(reduction);
+                    // head.physicsImpostor.setAngularVelocity(reducedVelocity);
                 });
             });
 
@@ -168,7 +168,7 @@
                         if (pickInfo.hit)
                         {
                             let normal = pickInfo.pickedMesh.getFacetNormal(pickInfo.faceId);
-                            const slapForce = 0.8;
+                            const slapForce = -2;
                             head.physicsImpostor.applyImpulse(new BABYLON.Vector3(normal.x * slapForce, normal.y * slapForce, normal.z * slapForce), head.getAbsolutePosition());
                         }
 
@@ -177,7 +177,7 @@
                 }
             });
 
-            // mouse move
+            // // mouse move
             let lines = null;
             document.addEventListener("pointermove", function () {
                 
