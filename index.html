@@ -16,6 +16,18 @@
                 height: 100%;
                 touch-action: none;
             }
+            #fps {
+                position: absolute;
+                background-color: black;
+                border: 2px solid red;
+                text-align: center;
+                font-size: 16px;
+                color: white;
+                top: 15px;
+                right: 10px;
+                width: 60px;
+                height: 20px;
+            }
         </style>
         <script src="https://preview.babylonjs.com/ammo.js"></script>
         <script src="https://cdn.babylonjs.com/babylon.js"></script>
@@ -28,27 +40,41 @@
     <canvas id="renderCanvas" touch-action="none"></canvas>
     <script>
         
-        function createSpring(point1, point2, scene, springRadius, springSteps, springThicknes)
+        function createSpring(point1, point2, point2Default, scene, springRadius, springSteps, springThicknes)
         {
             let path = [];
-            let xStepSize = (point1.x - point2.x) / springSteps;
-            let yStepSize = (point1.y - point2.y) / springSteps;
-            let zStepSize = (point1.z - point2.z) / springSteps;
+            const xStepSize = (point1.x - point2.x) / springSteps;
+            const yStepSize = (point1.y - point2.y) / springSteps;
+            const zStepSize = (point1.z - point2.z) / springSteps;
+            
+            const currentDistance = BABYLON.Vector3.Distance(point1, point2);
+            const defCurrDiffX = (point2.x - point2Default.x) / springSteps;
+            const defCurrDiffY = (point2.y - point2Default.y) / springSteps;
+            const defCurrDiffZ = (point2.z - point2Default.z) / springSteps;
+
             let angle = 0;
+            let curve = 0;
 
             for (step = 0; step < springSteps; step++)
             {
-                const radians = angle * (Math.PI/180);
-                const x = point1.x - (xStepSize * step) + Math.sin(radians) * springRadius;
-                const y = point1.y - (yStepSize * step);
-                const z = point1.z - (zStepSize * step) + Math.cos(radians) * springRadius;
+                const radians = angle * (Math.PI / 180);
+
+                // spring rotation
+                let x = point1.x - Math.sin(radians) * springRadius;
+                let y = point1.y - (yStepSize * step);
+                let z = point1.z - Math.cos(radians) * springRadius;
+
+                // spring curve
+                curve += (step * 1.01 ) /  springSteps;
+                x += defCurrDiffX * curve;
+                z += defCurrDiffZ * curve;
 
                 angle +=40;
 
                 path.push(new BABYLON.Vector3(x, y, z));
             }
 
-            const spring = BABYLON.MeshBuilder.CreateTube(null, {path: path, radius: springThicknes, sideOrientation: BABYLON.Mesh.DOUBLESIDE, updatable: true}, scene);
+            const spring = BABYLON.MeshBuilder.CreateTube(null, {path: path, radius: springThicknes, sideOrientation: BABYLON.Mesh.DOUBLESIDE, updatable: false}, scene);
             spring.collision = false;
             return spring;
         }
@@ -127,6 +153,7 @@
             shadowGenerator.getShadowMap().renderList.push(head);
             head.receiveShadows = true;
 
+            // setup physics
             let springMesh = null;
             scene.executeWhenReady(() =>
             {
@@ -137,6 +164,7 @@
                 let distanceJoint = new BABYLON.DistanceJoint({ maxDistance: -2, collision: false});
                 musicBox.physicsImpostor.addJoint(head.physicsImpostor, distanceJoint);
 
+                // render spring and do a friction
                 scene.onBeforeRenderObservable.add(function()
                 {
                     if (springMesh)
@@ -145,13 +173,13 @@
                     }
                     if (musicBox && head)
                     {
-                        springMesh = createSpring(musicBox.getAbsolutePosition(), head.getAbsolutePosition(), scene, 0.1, 200, 0.02);
+                        springMesh = createSpring(musicBox.getAbsolutePosition(), head.getAbsolutePosition(), new BABYLON.Vector3(0, 3.1, 0), scene, 0.1, 200, 0.02);
                     }
 
                     // reduction
-                    // const reduction = .99;
-                    // let reducedVelocity = head.physicsImpostor.getAngularVelocity().scale(reduction);
-                    // head.physicsImpostor.setAngularVelocity(reducedVelocity);
+                    const reduction = .97;
+                    let reducedVelocity = head.physicsImpostor.getAngularVelocity().scale(reduction);
+                    head.physicsImpostor.setAngularVelocity(reducedVelocity);
                 });
             });
 
@@ -168,7 +196,7 @@
                         if (pickInfo.hit)
                         {
                             let normal = pickInfo.pickedMesh.getFacetNormal(pickInfo.faceId);
-                            const slapForce = -2;
+                            const slapForce = -4;
                             head.physicsImpostor.applyImpulse(new BABYLON.Vector3(normal.x * slapForce, normal.y * slapForce, normal.z * slapForce), head.getAbsolutePosition());
                         }
 
