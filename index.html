@@ -51,13 +51,12 @@
             const defCurrDiffX = (point2.x - point2Default.x) / springSteps;
             const defCurrDiffY = (point2.y - point2Default.y) / springSteps;
             const defCurrDiffZ = (point2.z - point2Default.z) / springSteps;
-
             
             // path curve
             let curve = 0;
             for (step = 0; step < springSteps; step++)
             {
-                curve += (step * 1.01 ) /  springSteps;
+                curve += (step * 1.1 ) /  springSteps;
 
                 let x = point1.x + (defCurrDiffX * curve);
                 let y = point1.y - (yStepSize * step);
@@ -72,7 +71,7 @@
             {
                 const radians = angle * (Math.PI / 180);
                 const curvePoint = path[step];
-                const nextCurvePoint = path[step + 9];
+                const nextCurvePoint = path[step + 1];
 
                 let newPosition = new BABYLON.Vector3(curvePoint.x, curvePoint.y, curvePoint.z);
 
@@ -87,7 +86,6 @@
                     newPosition.x += (springRadius * Math.cos(radians) * perpendicular1.x) + (springRadius * Math.sin(radians) * perpendicular2.x);
                     newPosition.y += (springRadius * Math.cos(radians) * perpendicular1.y) + (springRadius * Math.sin(radians) * perpendicular2.y);
                     newPosition.z += (springRadius * Math.cos(radians) * perpendicular1.z) + (springRadius * Math.sin(radians) * perpendicular2.z);
-
                 }
 
                 path[step] = newPosition;
@@ -195,7 +193,7 @@
                     else if (musicBox && head)
                     {
                         springMesh = BABYLON.MeshBuilder.CreateTube("spring", 
-                                                 {path: springPath, radius: 0.02, sideOrientation: BABYLON.Mesh.DOUBLESIDE, updatable: true, tessellation : 5}, 
+                                                 {path: springPath, radius: 0.01, sideOrientation: BABYLON.Mesh.DOUBLESIDE, updatable: true, tessellation : 3}, 
                                                  scene);
                     }
 
