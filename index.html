@@ -52,27 +52,47 @@
             const defCurrDiffY = (point2.y - point2Default.y) / springSteps;
             const defCurrDiffZ = (point2.z - point2Default.z) / springSteps;
 
-            let angle = 0;
+            
+            // path curve
             let curve = 0;
+            for (step = 0; step < springSteps; step++)
+            {
+                curve += (step * 1.01 ) /  springSteps;
 
+                let x = point1.x + (defCurrDiffX * curve);
+                let y = point1.y - (yStepSize * step);
+                let z = point1.z + (defCurrDiffZ * curve);
+
+                path.push(new BABYLON.Vector3(x, y, z));
+            }
+
+            // spring rotation
+            let angle = 0;
             for (step = 0; step < springSteps; step++)
             {
                 const radians = angle * (Math.PI / 180);
+                const curvePoint = path[step];
+                const nextCurvePoint = path[step + 9];
 
-                // spring rotation
-                let x = point1.x - Math.sin(radians) * springRadius;
-                let y = point1.y - (yStepSize * step);
-                let z = point1.z - Math.cos(radians) * springRadius;
+                let newPosition = new BABYLON.Vector3(curvePoint.x, curvePoint.y, curvePoint.z);
 
-                // spring curve
-                curve += (step * 1.01 ) /  springSteps;
-                x += defCurrDiffX * curve;
-                // y += defCurrDiffX * (Math.sin(radians % Math.PI) * curve);
-                z += defCurrDiffZ * curve;
+
+                if (nextCurvePoint)
+                {
+
+                    const directionToNext = new BABYLON.Vector3(curvePoint.x - nextCurvePoint.x, curvePoint.y - nextCurvePoint.y, curvePoint.z - nextCurvePoint.z).normalize();
+                    const perpendicular1 = directionToNext.cross(new BABYLON.Vector3(1, 0, 0));
+                    const perpendicular2 = directionToNext.cross(new BABYLON.Vector3(0, 0, 1));
+                    
+                    newPosition.x += (springRadius * Math.cos(radians) * perpendicular1.x) + (springRadius * Math.sin(radians) * perpendicular2.x);
+                    newPosition.y += (springRadius * Math.cos(radians) * perpendicular1.y) + (springRadius * Math.sin(radians) * perpendicular2.y);
+                    newPosition.z += (springRadius * Math.cos(radians) * perpendicular1.z) + (springRadius * Math.sin(radians) * perpendicular2.z);
+
+                }
+
+                path[step] = newPosition;
 
                 angle +=40;
-
-                path.push(new BABYLON.Vector3(x, y, z));
             }
 
             return path;
