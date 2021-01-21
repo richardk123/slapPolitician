@@ -40,6 +40,75 @@
     <canvas id="renderCanvas" touch-action="none"></canvas>
     <script>
         
+        function createPunchEffect(scene, position)
+        {
+            // Create a particle system
+            var particleSystem = new BABYLON.ParticleSystem("particles", 1000, scene);
+
+            //Texture of each particle
+            particleSystem.particleTexture = new BABYLON.Texture("textures/flare.png", scene);
+
+            // Where the particles come from
+            particleSystem.emitter = position; // the starting location
+
+            // Colors of all particles
+            particleSystem.color1 = new BABYLON.Color4(1, 1, 0, 0.83);
+            particleSystem.color2 = new BABYLON.Color4(1, .5, 0);
+            particleSystem.colorDead = new BABYLON.Color4(0, 0, 0.2, 0.0);
+
+            // Size of each particle (random between...
+            particleSystem.minSize = 0.03;
+            particleSystem.maxSize = 0.05;
+
+            // Life time of each particle (random between...
+            particleSystem.minLifeTime = 0.005;
+            particleSystem.maxLifeTime = 0.01;
+
+            // Emission rate
+            particleSystem.emitRate = 1000;
+
+            /******* Emission Space ********/
+            particleSystem.createCylinderEmitter(0.2,0.2,1,1);
+
+            let pos = BABYLON.Vector3.Zero();
+            let count = 0
+            var radius = 0.1;
+
+            function rand() {
+                var rndAngle = (Math.PI / 9) * count;
+                var randX = radius * Math.sin(rndAngle);
+                var randY = 0;
+                var randZ = radius * Math.cos(rndAngle);
+                count++
+                if (count >= 18) {
+                    count = 0
+                }
+                return [randX, randY, randZ];
+            }
+            particleSystem.startDirectionFunction = function(worldMatrix, directionToUpdate)
+            {
+                let r = rand();
+                pos.set(r[0], r[1], r[2]);
+                BABYLON.Vector3.TransformCoordinatesFromFloatsToRef(pos.x,pos.y,pos.z, worldMatrix, directionToUpdate);
+            }
+
+            // Custom function to get the circle effect
+            particleSystem.startPositionFunction = function(worldMatrix, positionToUpdate)
+            {
+                BABYLON.Vector3.TransformCoordinatesFromFloatsToRef(pos.x, pos.y, pos.z, worldMatrix, position);
+            }
+
+            // Speed
+            particleSystem.minEmitPower = 1;
+            particleSystem.maxEmitPower = 2;
+            particleSystem.updateSpeed = 0.005;
+
+            // Start the particle system
+            particleSystem.start();
+
+            particleSystem.targetStopDuration = 0.02;
+        }
+
         function createSpringPath(point1, point2, point2Default, scene, springRadius, springSteps)
         {
             let path = [];
@@ -75,7 +144,6 @@
 
                 let newPosition = new BABYLON.Vector3(curvePoint.x, curvePoint.y, curvePoint.z);
 
-
                 if (nextCurvePoint)
                 {
 
@@ -102,6 +170,8 @@
         const createScene = async function () 
         {
             const scene = new BABYLON.Scene(engine);  
+            scene.createDefaultEnvironment();
+
 
             let head = null;
             var musicBox = null;
@@ -111,7 +181,7 @@
             scene.clearColor = new BABYLON.Color3(0, 0, 0);
             scene.debugLayer.show(); // debug
             scene.shadowsEnabled = true;
-            scene.enablePhysics(new BABYLON.Vector3(0, 9, 0), new BABYLON.AmmoJSPlugin()); // gravity up
+            scene.enablePhysics(new BABYLON.Vector3(0, 0, 0), new BABYLON.AmmoJSPlugin()); // gravity up
 
             // camera
             const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2, 3, new BABYLON.Vector3(0, 1, 0));
@@ -126,63 +196,91 @@
             light.shadowMaxZ = 6;
             light.intensity = 0.5;
             
-            let shadowGenerator = new BABYLON.ShadowGenerator(4024, light);
+            let shadowGenerator = new BABYLON.ShadowGenerator(1024, light);
             shadowGenerator.useBlurCloseExponentialShadowMap = true;
             shadowGenerator.forceBackFacesOnly = true;
             shadowGenerator.blurKernel = 32;
             shadowGenerator.useKernelBlur = true;
 
             // floor
-            let floorMaterial = new BABYLON.StandardMaterial("floorMaterial", scene);
-            floorMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+            {
+                const floorMaterial = new BABYLON.StandardMaterial("floorMaterial", scene);
+                floorMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+    
+                const floor = BABYLON.Mesh.CreateBox("floor", 1, scene);
+                floor.collision = false;
+                floor.scaling = new BABYLON.Vector3(100, 1, 100);
+                floor.material = floorMaterial;
+                shadowGenerator.getShadowMap().renderList.push(floor);
+                floor.receiveShadows = true;
+            }
 
-            let floor = BABYLON.Mesh.CreateBox("floor", 1, scene);
-            floor.collision = false;
-            floor.scaling = new BABYLON.Vector3(100, 1, 100);
-            floor.material = floorMaterial;
-            shadowGenerator.getShadowMap().renderList.push(floor);
-            floor.receiveShadows = true;
+            // glove
+            const glove = BABYLON.MeshBuilder.CreateSphere("glove", {diameter: 0.2}, scene);
 
-            // head & music box
-            // BABYLON.SceneLoader.ImportMesh(null, "./assets/", "headBox.obj", scene, function (meshes) 
+            shadowGenerator.getShadowMap().renderList.push(glove);
+            glove.receiveShadows = true;
+            glove.isVisible = true;
+
+            const gloveMaterial = new BABYLON.StandardMaterial("gloveMaterial", scene);
+            gloveMaterial.emissiveColor = new BABYLON.Color3(1, 0, 0);
+            glove.material = gloveMaterial;
+
+            glove.physicsImpostor = new BABYLON.PhysicsImpostor(glove, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 0.5, restitution: 0.9 }, scene);
+            glove.setEnabled(true);
+
+            // glove
+            // let glove = null;
+            // BABYLON.SceneLoader.ImportMesh(null, "./assets/", "glove2.glb", scene, function (meshes) 
             // {
+            //     glove = meshes[0];
 
+            //     glove.scaling.x = 0.03;
+            //     glove.scaling.y = 0.03;
+            //     glove.scaling.z = 0.03;
+
+            //     glove.position.x = 1;
+            //     glove.position.y = 1;
+            //     glove.position.z = 0;
+
+            //     shadowGenerator.getShadowMap().renderList.push(glove);
+            //     glove.receiveShadows = true;
+            //     glove.isVisible = true;
+
+            //     glove.physicsImpostor = new BABYLON.PhysicsImpostor(glove, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 0.5, restitution: 0.9 }, scene);
+            //     glove.setEnabled(false);
             // });
 
-            musicBox = BABYLON.Mesh.CreateBox("1", 1, scene);
-            musicBox.collision = false;
-            musicBox.position = new BABYLON.Vector3(0, 1.1, 0);
-            // musicBox.rotation = new BABYLON.Vector3(0, -Math.PI / 2.5, 0);
+            // music box
+            {
+                musicBox = BABYLON.Mesh.CreateBox("1", 1, scene);
+                musicBox.collision = false;
+                musicBox.position = new BABYLON.Vector3(0, 1.1, 0);
+                musicBox.physicsImpostor = new BABYLON.PhysicsImpostor(musicBox, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+                shadowGenerator.getShadowMap().renderList.push(musicBox);
+                musicBox.receiveShadows = true;
+            }
 
-            var musicBoxMaterial = new BABYLON.StandardMaterial("musicBoxMaterial", scene);
-            musicBoxMaterial.emissiveColor = new BABYLON.Color3(1, 0, 0);
-            musicBox.material = musicBoxMaterial;
+            // head
+            {
+                head = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1}, scene);
+                head.position = new BABYLON.Vector3(0, 2, 0);
+                head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9 }, scene);
+                
+                // self shadow
+                shadowGenerator.getShadowMap().renderList.push(head);
+                head.receiveShadows = true;
+            }
 
-            shadowGenerator.getShadowMap().renderList.push(musicBox);
-            musicBox.receiveShadows = true;
-
-            head = BABYLON.MeshBuilder.CreateSphere("sphere", {});
-            head.collision = false;
-            head.position = new BABYLON.Vector3(0, 2, 0);
-            // head.rotation = new BABYLON.Vector3(0, -Math.PI / 2.5, 0);
-            
-            // self shadow
-            shadowGenerator.getShadowMap().renderList.push(head);
-            head.receiveShadows = true;
-
-            // setup physics
             let springMesh = null;
             scene.executeWhenReady(() =>
             {
                 // create spring
-                head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.9 }, scene);
-                musicBox.physicsImpostor = new BABYLON.PhysicsImpostor(musicBox, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
-
                 let distanceJoint = new BABYLON.DistanceJoint({ maxDistance: -2, collision: false});
                 musicBox.physicsImpostor.addJoint(head.physicsImpostor, distanceJoint);
 
                 // render spring and do a friction
-                scene.onBeforeRenderObservable.add(function()
+                scene.onBeforeRenderObservable.add(() =>
                 {
                     const springPath = createSpringPath(musicBox.getAbsolutePosition(), head.getAbsolutePosition(), new BABYLON.Vector3(0, 3.1, 0), scene, 0.1, 200);
 
@@ -197,11 +295,20 @@
                                                  scene);
                         springMesh.collision = false;
                     }
+                });
 
-                    // reduction
-                    const reduction = .97;
-                    let reducedVelocity = head.physicsImpostor.getAngularVelocity().scale(reduction);
-                    head.physicsImpostor.setAngularVelocity(reducedVelocity);
+                //on physics update
+                scene.onBeforePhysicsObservable.add(() =>
+                {
+                    if (head)
+                    {
+                        // apply gravity only for head
+                        head.physicsImpostor.applyForce(new BABYLON.Vector3(0, 9, 0), head.getAbsolutePosition());
+
+                        // spring friction
+                        let reducedVelocity = head.physicsImpostor.getAngularVelocity().scale(.97);
+                        head.physicsImpostor.setAngularVelocity(reducedVelocity);
+                    }
                 });
             });
 
@@ -215,39 +322,36 @@
                     {
                         const pickInfo = pointerInfo.pickInfo;
 
-                        if (pickInfo.hit)
+                        if (pickInfo.hit && pickInfo.pickedMesh === head)
                         {
-                            let normal = pickInfo.pickedMesh.getFacetNormal(pickInfo.faceId);
+
+                            const normal = pickInfo.pickedMesh.getFacetNormal(pickInfo.faceId);
                             const slapForce = -4;
-                            head.physicsImpostor.applyImpulse(new BABYLON.Vector3(normal.x * slapForce, normal.y * slapForce, normal.z * slapForce), head.getAbsolutePosition());
+                            const punchForce = new BABYLON.Vector3(normal.x * slapForce, normal.y * slapForce, normal.z * slapForce);
+                            const hitPoint = pickInfo.pickedPoint;
+
+                            const gloveDistance = 0.5;
+                            
+                            glove.setEnabled(true);
+                            glove.position.x = hitPoint.x + (normal.x * gloveDistance);
+                            glove.position.y = hitPoint.y + (normal.y * gloveDistance);
+                            glove.position.z = hitPoint.z + (normal.z * gloveDistance);
+                            glove.lookAt(hitPoint);
+                            glove.physicsImpostor.setLinearVelocity(new BABYLON.Vector3(0, 0, 0));
+                            glove.physicsImpostor.applyImpulse(punchForce.scale(0.5), glove.getAbsolutePosition());
+
+                            // head.physicsImpostor.applyImpulse(punchForce, head.getAbsolutePosition());
+
+                            // createPunchEffect(scene, hitPoint);
+                            
+                            setTimeout(() =>
+                            {
+                                glove.setEnabled(false);
+                            }, 200);
                         }
 
                         break;
                     }
-                }
-            });
-
-            // // mouse move
-            let lines = null;
-            document.addEventListener("pointermove", function () {
-                
-                if (lines)
-                {
-                    lines.dispose();
-                }
-
-                var pickResult = scene.pick(scene.pointerX, scene.pointerY);
-                
-                if (pickResult.hit)
-                {
-                    const normal = pickResult.getNormal();
-                    let position = pickResult.pickedPoint;
-                    
-                    let directionPosition = new BABYLON.Vector3(position.x + normal.x, position.y + normal.y, position.z + normal.z);
-
-                    var points = [position, directionPosition];
-                    lines = BABYLON.MeshBuilder.CreateLines("lines", {points:points, updatable:true}, scene);
-                    lines.isPickable = false;
                 }
             });
 
