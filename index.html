@@ -172,7 +172,6 @@
             const scene = new BABYLON.Scene(engine);  
             scene.createDefaultEnvironment();
 
-
             let head = null;
             var musicBox = null;
 
@@ -208,11 +207,11 @@
                 floorMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
     
                 const floor = BABYLON.Mesh.CreateBox("floor", 1, scene);
-                floor.collision = false;
                 floor.scaling = new BABYLON.Vector3(100, 1, 100);
                 floor.material = floorMaterial;
                 shadowGenerator.getShadowMap().renderList.push(floor);
                 floor.receiveShadows = true;
+                floor.physicsImpostor = new BABYLON.PhysicsImpostor(floor, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9, friction: 0.5 }, scene);
             }
 
             // glove
@@ -223,10 +222,9 @@
             glove.isVisible = true;
 
             const gloveMaterial = new BABYLON.StandardMaterial("gloveMaterial", scene);
-            gloveMaterial.emissiveColor = new BABYLON.Color3(1, 0, 0);
             glove.material = gloveMaterial;
 
-            glove.physicsImpostor = new BABYLON.PhysicsImpostor(glove, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 0.5, restitution: 0.9 }, scene);
+            glove.physicsImpostor = new BABYLON.PhysicsImpostor(glove, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 0.5, restitution: 0.9, friction: 0 }, scene);
             glove.setEnabled(true);
 
             // glove
@@ -265,7 +263,7 @@
             {
                 head = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1}, scene);
                 head.position = new BABYLON.Vector3(0, 2, 0);
-                head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9 }, scene);
+                head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9, friction: 0.5 }, scene);
                 
                 // self shadow
                 shadowGenerator.getShadowMap().renderList.push(head);
@@ -304,6 +302,7 @@
                     {
                         // apply gravity only for head
                         head.physicsImpostor.applyForce(new BABYLON.Vector3(0, 9, 0), head.getAbsolutePosition());
+                        glove.physicsImpostor.applyForce(new BABYLON.Vector3(0, -4, 0), head.getAbsolutePosition());
 
                         // spring friction
                         let reducedVelocity = head.physicsImpostor.getAngularVelocity().scale(.97);
@@ -326,28 +325,24 @@
                         {
 
                             const normal = pickInfo.pickedMesh.getFacetNormal(pickInfo.faceId);
-                            const slapForce = -4;
+                            const slapForce = -7;
                             const punchForce = new BABYLON.Vector3(normal.x * slapForce, normal.y * slapForce, normal.z * slapForce);
                             const hitPoint = pickInfo.pickedPoint;
 
-                            const gloveDistance = 0.5;
+                            const gloveDistance = 1.5;
                             
                             glove.setEnabled(true);
                             glove.position.x = hitPoint.x + (normal.x * gloveDistance);
                             glove.position.y = hitPoint.y + (normal.y * gloveDistance);
                             glove.position.z = hitPoint.z + (normal.z * gloveDistance);
-                            glove.lookAt(hitPoint);
+                            gloveMaterial.emissiveColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
+                            // glove.lookAt(hitPoint);
                             glove.physicsImpostor.setLinearVelocity(new BABYLON.Vector3(0, 0, 0));
                             glove.physicsImpostor.applyImpulse(punchForce.scale(0.5), glove.getAbsolutePosition());
 
                             // head.physicsImpostor.applyImpulse(punchForce, head.getAbsolutePosition());
 
                             // createPunchEffect(scene, hitPoint);
-                            
-                            setTimeout(() =>
-                            {
-                                glove.setEnabled(false);
-                            }, 200);
                         }
 
                         break;
