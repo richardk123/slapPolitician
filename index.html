@@ -195,6 +195,7 @@
                         springMesh = BABYLON.MeshBuilder.CreateTube("spring", 
                                                  {path: springPath, radius: 0.01, sideOrientation: BABYLON.Mesh.DOUBLESIDE, updatable: true, tessellation : 3}, 
                                                  scene);
+                        springMesh.collision = false;
                     }
 
                     // reduction
