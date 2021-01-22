@@ -33,7 +33,6 @@
         <script src="https://cdn.babylonjs.com/babylon.js"></script>
         <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
         <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
-        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
         <script src="babylon.objFileLoader.min.js"></script>
     </head>
    <body>
@@ -134,6 +133,8 @@
                 path.push(new BABYLON.Vector3(x, y, z));
             }
 
+            const lastDirection = path[path.length -1].subtract(path[path.length -2]).normalize();
+
             // spring rotation
             let angle = 0;
             for (step = 0; step < springSteps; step++)
@@ -161,7 +162,7 @@
                 angle +=40;
             }
 
-            return path;
+            return {path: path, lastDirection: lastDirection};
         }
 
         const canvas = document.getElementById("renderCanvas");
@@ -172,9 +173,6 @@
             const scene = new BABYLON.Scene(engine);  
             scene.createDefaultEnvironment();
 
-            let head = null;
-            var musicBox = null;
-
             await Ammo();
             
             scene.clearColor = new BABYLON.Color3(0, 0, 0);
@@ -183,19 +181,31 @@
             scene.enablePhysics(new BABYLON.Vector3(0, 0, 0), new BABYLON.AmmoJSPlugin()); // gravity up
 
             // camera
-            const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2, 3, new BABYLON.Vector3(0, 1, 0));
-            camera.setPosition(new BABYLON.Vector3(0, 6, 6));
+            const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2, 3, new BABYLON.Vector3(0, 2, 0));
+            camera.setPosition(new BABYLON.Vector3(0, 3, 7));
             camera.attachControl(canvas, true);  // rotate with mouse down
 
             // light
-            const light = new BABYLON.SpotLight("light", new BABYLON.Vector3(0, 7, 2), new BABYLON.Vector3(0, -1, -0.3), Math.PI / 3, 5, scene);
+            const light = new BABYLON.SpotLight("light", new BABYLON.Vector3(0, 5, 1), new BABYLON.Vector3(0, -1, -0.4), Math.PI / 3, 5, scene);
             light.light = 10;
             light.range = 250;
             light.shadowMinZ = 0.1;
-            light.shadowMaxZ = 6;
-            light.intensity = 0.5;
+            light.shadowMaxZ = 9;
+            light.intensity = 0.9;
+            light.diffuse = new BABYLON.Color3(1, 1, 0.9);
+	        light.specular = new BABYLON.Color3(1, 1, 0.8);
+
+            // Create the "God Rays" effect (volumetric light scattering)
+            var godrays = new BABYLON.VolumetricLightScatteringPostProcess('godrays', 1.0, camera, null, 10, BABYLON.Texture.BILINEAR_SAMPLINGMODE, engine, false);
+            godrays.mesh.material.diffuseTexture = new BABYLON.Texture('textures/flare.png', scene, true, false, BABYLON.Texture.BILINEAR_SAMPLINGMODE);
+            godrays.mesh.material.diffuseTexture.hasAlpha = true;
+            godrays.mesh.position = new BABYLON.Vector3(0, 4.3, 1);
+            godrays.mesh.scaling = new BABYLON.Vector3(0.3, 0.3, 0.3);
             
-            let shadowGenerator = new BABYLON.ShadowGenerator(1024, light);
+            const lamp = BABYLON.Mesh.CreateBox("lamp", 1, scene);
+            lamp.position = new BABYLON.Vector3(0, 4.8, 1);
+
+            let shadowGenerator = new BABYLON.ShadowGenerator(512, light);
             shadowGenerator.useBlurCloseExponentialShadowMap = true;
             shadowGenerator.forceBackFacesOnly = true;
             shadowGenerator.blurKernel = 32;
@@ -214,68 +224,55 @@
                 floor.physicsImpostor = new BABYLON.PhysicsImpostor(floor, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9, friction: 0.5 }, scene);
             }
 
-            // glove
-            const glove = BABYLON.MeshBuilder.CreateSphere("glove", {diameter: 0.2}, scene);
+            // ball
+            const ball = BABYLON.MeshBuilder.CreateSphere("ball", {diameter: 0.2, segments : 6}, scene);
 
-            shadowGenerator.getShadowMap().renderList.push(glove);
-            glove.receiveShadows = true;
-            glove.isVisible = true;
+            shadowGenerator.getShadowMap().renderList.push(ball);
+            ball.receiveShadows = true;
+            ball.isVisible = true;
 
-            const gloveMaterial = new BABYLON.StandardMaterial("gloveMaterial", scene);
-            glove.material = gloveMaterial;
+            const ballMaterial = new BABYLON.StandardMaterial("ballMaterial", scene);
+            ball.material = ballMaterial;
 
-            glove.physicsImpostor = new BABYLON.PhysicsImpostor(glove, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 0.5, restitution: 0.9, friction: 0 }, scene);
-            glove.setEnabled(true);
+            ball.physicsImpostor = new BABYLON.PhysicsImpostor(ball, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 0.5, restitution: 0.9, friction: 0 }, scene);
+            ball.setEnabled(false);
 
-            // glove
-            // let glove = null;
-            // BABYLON.SceneLoader.ImportMesh(null, "./assets/", "glove2.glb", scene, function (meshes) 
-            // {
-            //     glove = meshes[0];
-
-            //     glove.scaling.x = 0.03;
-            //     glove.scaling.y = 0.03;
-            //     glove.scaling.z = 0.03;
-
-            //     glove.position.x = 1;
-            //     glove.position.y = 1;
-            //     glove.position.z = 0;
-
-            //     shadowGenerator.getShadowMap().renderList.push(glove);
-            //     glove.receiveShadows = true;
-            //     glove.isVisible = true;
-
-            //     glove.physicsImpostor = new BABYLON.PhysicsImpostor(glove, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 0.5, restitution: 0.9 }, scene);
-            //     glove.setEnabled(false);
-            // });
-
+            var musicBox = null;
             // music box
             {
-                musicBox = BABYLON.Mesh.CreateBox("1", 1, scene);
-                musicBox.collision = false;
+                musicBox = BABYLON.Mesh.CreateBox("music box", 1, scene);
                 musicBox.position = new BABYLON.Vector3(0, 1.1, 0);
-                musicBox.physicsImpostor = new BABYLON.PhysicsImpostor(musicBox, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, scene);
+                musicBox.physicsImpostor = new BABYLON.PhysicsImpostor(musicBox, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9, friction: 0 }, scene);
                 shadowGenerator.getShadowMap().renderList.push(musicBox);
                 musicBox.receiveShadows = true;
             }
 
-            // head
+            let head = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1.18, segments : 6}, scene);
+            head.position = new BABYLON.Vector3(0, 2, 0);
+            head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9, friction: 0.5 }, scene);
+            shadowGenerator.getShadowMap().renderList.push(head);
+            head.receiveShadows = true;
+            head.visibility  = 0;
+
+            let babis = null;
+            // babis
+            BABYLON.SceneLoader.ImportMesh("", "./assets/", "babis.glb", scene, function (meshes) 
             {
-                head = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1}, scene);
-                head.position = new BABYLON.Vector3(0, 2, 0);
-                head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9, friction: 0.5 }, scene);
-                
-                // self shadow
-                shadowGenerator.getShadowMap().renderList.push(head);
-                head.receiveShadows = true;
-            }
+                babis = meshes[0];
+                babis.scaling = new BABYLON.Vector3(0.6, 0.6, 0.6);
+                shadowGenerator.getShadowMap().renderList.push(babis);
+                babis.receiveShadows = true;
+            });
 
             let springMesh = null;
+            // on scene ready
             scene.executeWhenReady(() =>
             {
                 // create spring
                 let distanceJoint = new BABYLON.DistanceJoint({ maxDistance: -2, collision: false});
                 musicBox.physicsImpostor.addJoint(head.physicsImpostor, distanceJoint);
+
+                head.physicsImpostor.applyImpulse(new BABYLON.Vector3(Math.random(), Math.random(), Math.random()).scale(3), head.getAbsolutePosition());
 
                 // render spring and do a friction
                 scene.onBeforeRenderObservable.add(() =>
@@ -284,14 +281,20 @@
 
                     if (springMesh)
                     {
-                        springMesh = BABYLON.MeshBuilder.CreateTube("spring", {path: springPath, instance: springMesh} );
+                        springMesh = BABYLON.MeshBuilder.CreateTube("spring", {path: springPath.path, instance: springMesh} );
                     } 
-                    else if (musicBox && head)
+                    else
                     {
                         springMesh = BABYLON.MeshBuilder.CreateTube("spring", 
-                                                 {path: springPath, radius: 0.01, sideOrientation: BABYLON.Mesh.DOUBLESIDE, updatable: true, tessellation : 3}, 
+                                                 {path: springPath.path, radius: 0.01, sideOrientation: BABYLON.Mesh.DOUBLESIDE, updatable: true, tessellation : 3}, 
                                                  scene);
                         springMesh.collision = false;
+                    }
+
+                    if (head && babis)
+                    {
+                        babis.position = head.position;
+                        babis.rotation = springPath.lastDirection;
                     }
                 });
 
@@ -302,7 +305,9 @@
                     {
                         // apply gravity only for head
                         head.physicsImpostor.applyForce(new BABYLON.Vector3(0, 9, 0), head.getAbsolutePosition());
-                        glove.physicsImpostor.applyForce(new BABYLON.Vector3(0, -4, 0), head.getAbsolutePosition());
+
+                        // apply gravity for ball
+                        ball.physicsImpostor.applyForce(new BABYLON.Vector3(0, -4, 0), head.getAbsolutePosition());
 
                         // spring friction
                         let reducedVelocity = head.physicsImpostor.getAngularVelocity().scale(.97);
@@ -321,7 +326,7 @@
                     {
                         const pickInfo = pointerInfo.pickInfo;
 
-                        if (pickInfo.hit && pickInfo.pickedMesh === head)
+                        if (pickInfo.hit && pickInfo.pickedMesh)
                         {
 
                             const normal = pickInfo.pickedMesh.getFacetNormal(pickInfo.faceId);
@@ -329,16 +334,16 @@
                             const punchForce = new BABYLON.Vector3(normal.x * slapForce, normal.y * slapForce, normal.z * slapForce);
                             const hitPoint = pickInfo.pickedPoint;
 
-                            const gloveDistance = 1.5;
+                            const ballDistance = 1.5;
                             
-                            glove.setEnabled(true);
-                            glove.position.x = hitPoint.x + (normal.x * gloveDistance);
-                            glove.position.y = hitPoint.y + (normal.y * gloveDistance);
-                            glove.position.z = hitPoint.z + (normal.z * gloveDistance);
-                            gloveMaterial.emissiveColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
-                            // glove.lookAt(hitPoint);
-                            glove.physicsImpostor.setLinearVelocity(new BABYLON.Vector3(0, 0, 0));
-                            glove.physicsImpostor.applyImpulse(punchForce.scale(0.5), glove.getAbsolutePosition());
+                            ball.setEnabled(true);
+                            ball.position.x = hitPoint.x + (normal.x * ballDistance);
+                            ball.position.y = hitPoint.y + (normal.y * ballDistance);
+                            ball.position.z = hitPoint.z + (normal.z * ballDistance);
+                            ballMaterial.emissiveColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
+                            
+                            ball.physicsImpostor.setLinearVelocity(new BABYLON.Vector3(0, 0, 0));
+                            ball.physicsImpostor.applyImpulse(punchForce.scale(0.5), ball.getAbsolutePosition());
 
                             // head.physicsImpostor.applyImpulse(punchForce, head.getAbsolutePosition());
 
