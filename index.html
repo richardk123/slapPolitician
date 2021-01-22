@@ -123,7 +123,7 @@
             let curve = 0;
             for (step = 0; step < springSteps; step++)
             {
-                curve += (step * 1.1 ) /  springSteps;
+                curve += (step * 1.2 ) /  springSteps;
 
                 let x = point1.x + (defCurrDiffX * curve);
                 let y = point1.y - (yStepSize * step);
@@ -240,7 +240,7 @@
             // music box
             {
                 musicBox = BABYLON.Mesh.CreateBox("music box", 1, scene);
-                musicBox.position = new BABYLON.Vector3(0, 1.1, 0);
+                musicBox.position = new BABYLON.Vector3(0, 1.01, 0);
                 musicBox.physicsImpostor = new BABYLON.PhysicsImpostor(musicBox, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9, friction: 0 }, scene);
                 shadowGenerator.getShadowMap().renderList.push(musicBox);
                 musicBox.receiveShadows = true;
@@ -248,10 +248,10 @@
 
             let head = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1.18, segments : 6}, scene);
             head.position = new BABYLON.Vector3(0, 2, 0);
-            head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9, friction: 0.5 }, scene);
+            head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9, friction: 1 }, scene);
             shadowGenerator.getShadowMap().renderList.push(head);
             head.receiveShadows = true;
-            head.visibility  = 0;
+            head.visibility  = 0.1;
 
             let babis = null;
             // babis
@@ -296,8 +296,9 @@
 
                     if (head && babis)
                     {
-                        babis.position = head.position;
+                        babis.position = springPath.path[springPath.path.length - 1];
                         babis.rotation = springPath.lastDirection;
+                        // babis.lookAt(head.position);
                     }
                 });
 
