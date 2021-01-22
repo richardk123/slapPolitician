@@ -33,7 +33,6 @@
         <script src="https://cdn.babylonjs.com/babylon.js"></script>
         <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
         <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
-        <script src="babylon.objFileLoader.min.js"></script>
     </head>
    <body>
     <canvas id="renderCanvas" touch-action="none"></canvas>
@@ -277,7 +276,11 @@
                 // render spring and do a friction
                 scene.onBeforeRenderObservable.add(() =>
                 {
-                    const springPath = createSpringPath(musicBox.getAbsolutePosition(), head.getAbsolutePosition(), new BABYLON.Vector3(0, 3.1, 0), scene, 0.1, 200);
+                    // hack to spring start at the bottom of h
+                    const half = head.getAbsolutePosition().subtract(musicBox.getAbsolutePosition()).normalize().scale(0.5);
+                    const springTargetPosition = head.getAbsolutePosition().subtract(half);
+
+                    const springPath = createSpringPath(musicBox.getAbsolutePosition(), springTargetPosition, new BABYLON.Vector3(0, 3.1, 0), scene, 0.1, 200);
 
                     if (springMesh)
                     {
@@ -326,7 +329,7 @@
                     {
                         const pickInfo = pointerInfo.pickInfo;
 
-                        if (pickInfo.hit && pickInfo.pickedMesh)
+                        if (pickInfo.hit && pickInfo.pickedMesh === head)
                         {
 
                             const normal = pickInfo.pickedMesh.getFacetNormal(pickInfo.faceId);
