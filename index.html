@@ -282,7 +282,7 @@
 
             let head = BABYLON.MeshBuilder.CreateSphere("babisCollision", {diameter: 1.18, segments : 18}, scene);
             head.position = new BABYLON.Vector3(0, 2, 0);
-            head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.9, friction: 1 }, scene);
+            head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9, friction: 1 }, scene);
             head.visibility = 0.1;
 
             // babis
@@ -363,12 +363,20 @@
                     {
                         const lastDir = springPath.lastDirection;
                         babis.position = springPath.path[springPath.path.length - 1];
-                        const perpendicularX = lastDir.cross(new BABYLON.Vector3(1, 0, 0));
+                        const perpendicularX = lastDir.cross(new BABYLON.Vector3(1, 0, 1));
 
                         const lookAt = new BABYLON.Vector3(babis.position.x + perpendicularX.x, 
                         babis.position.y + perpendicularX.y, 
                         babis.position.z + perpendicularX.z);
                         babis.lookAt(lookAt);
+
+                        let axis1, axis2, axis3;
+                        axis1 = lastDir;
+                        axis3 = perpendicularX;
+                        axis2 = BABYLON.Vector3.Cross(axis3, axis1);
+
+                        babis.rotation = BABYLON.Vector3.RotationFromAxis(axis1, axis2, axis3);
+                        babis.rotation = new BABYLON.Vector3(-babis.rotation.x, babis.rotation.y + Math.PI / 2,babis.rotation.z - Math.PI / 2);
                     }
                 });
 
