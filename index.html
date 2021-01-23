@@ -24,9 +24,12 @@
     </head>
    <body>
     <canvas id="renderCanvas" touch-action="none"></canvas>
+    <div id="progressBar"></div>
     <script>
 
         let pauseShitTalk = false;
+
+
 
         function loadOffensiveTalk(files, scene)
         {
@@ -120,7 +123,6 @@
 
                 if (nextCurvePoint)
                 {
-
                     const directionToNext = new BABYLON.Vector3(curvePoint.x - nextCurvePoint.x, curvePoint.y - nextCurvePoint.y, curvePoint.z - nextCurvePoint.z).normalize();
                     const perpendicular1 = directionToNext.cross(new BABYLON.Vector3(1, 0, 0));
                     const perpendicular2 = directionToNext.cross(new BABYLON.Vector3(0, 0, 1));
@@ -144,11 +146,14 @@
         const createScene = async function () 
         {
             const scene = new BABYLON.Scene(engine);  
-            scene.createDefaultEnvironment();
+            // scene.createDefaultEnvironment();
+            // scene.createDefaultSkybox();
+            // scene.createDefaultLight();
 
             await Ammo();
             
             scene.clearColor = new BABYLON.Color3(0, 0, 0);
+            scene.ambientColor = new BABYLON.Color3(1, 1, 1);
             // scene.debugLayer.show(); // debug
             scene.enablePhysics(new BABYLON.Vector3(0, 0, 0), new BABYLON.AmmoJSPlugin()); // gravity up
 
@@ -158,7 +163,7 @@
             // camera.attachControl(canvas, true);  // rotate with mouse down
 
             // light
-            const light = new BABYLON.SpotLight("light", new BABYLON.Vector3(0, 5, 1), new BABYLON.Vector3(0, -1, -0.4), Math.PI / 3, 5, scene);
+            const light = new BABYLON.SpotLight("light", new BABYLON.Vector3(0, 5, 0), new BABYLON.Vector3(0, -1, .1), Math.PI / 3, 5, scene);
             light.light = 10;
             light.range = 250;
             light.shadowMinZ = 0.1;
@@ -215,20 +220,20 @@
             {
                 // musicBox = BABYLON.Mesh.CreateBox("music box", 1, scene);
                 musicBox = meshes[0];
-                musicBox.position = new BABYLON.Vector3(0, 1.1, 0);
+                musicBox.position = new BABYLON.Vector3(0, 1, 0);
                 musicBox.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
                 musicBox.rotation = new BABYLON.Vector3(0, -Math.PI / 3, 0);
                 musicBox.physicsImpostor = new BABYLON.PhysicsImpostor(musicBox, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9, friction: 0 }, scene);
-                shadowGenerator.getShadowMap().renderList.push(musicBox);
-                musicBox.receiveShadows = true;
+                shadowGenerator.getShadowMap().renderList.push(meshes[1]);
+                meshes[1].receiveShadows = true;
+                
+                meshes[1].material.ambientColor = new BABYLON.Color3(1, 1, 1);
             });
 
-            let head = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1.18, segments : 6}, scene);
+            let head = BABYLON.MeshBuilder.CreateSphere("babisCollision", {diameter: 1.18, segments : 18}, scene);
             head.position = new BABYLON.Vector3(0, 2, 0);
-            head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9, friction: 1 }, scene);
-            shadowGenerator.getShadowMap().renderList.push(head);
-            head.receiveShadows = true;
-            head.visibility  = 0;
+            head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.9, friction: 1 }, scene);
+            head.visibility = 0.1;
 
             let babis = null;
             // babis
@@ -236,8 +241,10 @@
             {
                 babis = meshes[0];
                 babis.scaling = new BABYLON.Vector3(0.6, 0.6, 0.6);
-                shadowGenerator.getShadowMap().renderList.push(babis);
-                babis.receiveShadows = true;
+                shadowGenerator.getShadowMap().renderList.push(meshes[1]);
+                // meshes[1].receiveShadows = true;
+
+                meshes[1].material.ambientColor = new BABYLON.Color3(0.3, 0.3, 0.3);
             });
 
             let springMesh = null;
@@ -292,18 +299,14 @@
                     // babis
                     if (babis && head)
                     {
-                        babis.position = springPath.path[springPath.path.length - 1];
                         const lastDir = springPath.lastDirection;
+                        babis.position = springPath.path[springPath.path.length - 1];
                         const perpendicularX = lastDir.cross(new BABYLON.Vector3(1, 0, 0));
 
                         const lookAt = new BABYLON.Vector3(babis.position.x + perpendicularX.x, 
                         babis.position.y + perpendicularX.y, 
                         babis.position.z + perpendicularX.z);
                         babis.lookAt(lookAt);
-
-                        // const test = BABYLON.MeshBuilder.CreateSphere(null, {diameter: 0.02, segments : 6}, scene);
-                        // test.position = lookAt;
-                        // babis.rotation = new BABYLON.Vector3(head.rotation.x, head.rotation.y + (Math.PI ), head.rotation.y);
                     }
                 });
 
