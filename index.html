@@ -18,9 +18,20 @@
             }
             
             #progressBar {
-                position: absolute;
+                position: fixed;
                 left: 50%;
                 bottom: 10px;
+                width: 200px;
+                height: 30px;
+                border: 1px solid darkgreen;
+                background-color: black;
+                transform: translate(-50%, -50%);
+            }
+            #status
+            {
+                background-color: green;
+                height: 100%;
+                width: 0%;
             }
         </style>
         <script src="https://preview.babylonjs.com/ammo.js"></script>
@@ -30,10 +41,28 @@
     </head>
    <body>
     <canvas id="renderCanvas" touch-action="none"></canvas>
-    <div id="progressBar"></div>
+    <div id="progressBar">
+        <div id="status"></div>
+    </div>
     <script>
 
+        const reloadTime = 30;
+        let ballShootTime = reloadTime;
         let pauseShitTalk = false;
+
+        setInterval(() =>
+        {
+            if (ballShootTime < reloadTime)
+            {
+                ballShootTime++;
+            }
+            document.getElementById("status").style.width = (ballShootTime / reloadTime) * 100 + "%";
+        }, 100);
+
+        function canShootBall()
+        {
+            return ballShootTime >= reloadTime;
+        }
 
         function loadOffensiveTalk(files, scene)
         {
@@ -248,7 +277,7 @@
             scene.executeWhenReady(() =>
             {
                 let springMesh = null;
-                
+
                 // create spring
                 let distanceJoint = new BABYLON.DistanceJoint({ maxDistance: -2, collision: false});
                 musicBox.physicsImpostor.addJoint(head.physicsImpostor, distanceJoint);
@@ -336,8 +365,10 @@
                     {
                         const pickInfo = pointerInfo.pickInfo;
 
-                        if (pickInfo.hit && pickInfo.pickedMesh === head)
+                        if (pickInfo.hit && pickInfo.pickedMesh === head && canShootBall())
                         {
+                            // reset
+                            ballShootTime = 0;
 
                             const normal = pickInfo.pickedMesh.getFacetNormal(pickInfo.faceId);
                             const slapForce = -7;
