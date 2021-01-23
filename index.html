@@ -75,7 +75,7 @@
             if (ballShootTime < reloadTime)
             {
                 ballShootTime++;
-                document.getElementById("status").textContent = "Nabijim!";
+                document.getElementById("status").textContent = "Nabíjím!";
             }
             else
             {
@@ -271,10 +271,13 @@
                 meshes[1].material.ambientColor = new BABYLON.Color3(1, 1, 1);
             });
 
-            let head = BABYLON.MeshBuilder.CreateSphere("babisCollision", {diameter: 1.18, segments : 18}, scene);
+            let head = BABYLON.MeshBuilder.CreateSphere("babisCollision", {diameter: 1.38, segments : 18}, scene);
             head.position = new BABYLON.Vector3(0, 2, 0);
             head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9, friction: 1 }, scene);
-            head.visibility = 0.1;
+            const headMaterial = new BABYLON.StandardMaterial("headMaterial", scene);
+            headMaterial.diffuseColor  = new BABYLON.Color3(1, 1, 0);
+            head.material = headMaterial;
+            head.visibility = 0.15;
 
             // babis
             let babis = null;
@@ -287,7 +290,17 @@
 
                 // model
                 meshes[1].material.ambientColor = new BABYLON.Color3(0.3, 0.3, 0.3);
+
+                let halo = BABYLON.Mesh.CreateTorus("halo", 0.7, 0.05, 24, scene);
+                meshes[1].addChild(halo);
+                halo.position.y = 2;
+                halo.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
+                const haloMaterial = new BABYLON.StandardMaterial("haloMaterial", scene);
+                haloMaterial.emissiveColor = new BABYLON.Color3(1, 1, 0);
+                halo.material = haloMaterial;
             });
+
+            light.parent = babis;
 
             // on scene ready
             scene.executeWhenReady(() =>
@@ -362,7 +375,6 @@
                         axis2 = BABYLON.Vector3.Cross(axis3, axis1);
 
                         babis.rotation = BABYLON.Vector3.RotationFromAxis(axis1, axis2, axis3);
-                        // babis.rotation = new BABYLON.Vector3(-babis.rotation.x, -babis.rotation.y - Math.PI / 2, babis.rotation.z + Math.PI / 2);
                     }
                 });
 
