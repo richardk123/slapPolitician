@@ -32,6 +32,8 @@
                 background-color: green;
                 height: 100%;
                 width: 0%;
+                color: silver;
+                text-align: center;
             }
             #debth
             {
@@ -70,6 +72,11 @@
             if (ballShootTime < reloadTime)
             {
                 ballShootTime++;
+                document.getElementById("status").textContent = "Nabijim!";
+            }
+            else
+            {
+                document.getElementById("status").textContent = "Nabito!";
             }
             document.getElementById("status").style.width = (ballShootTime / reloadTime) * 100 + "%";
             document.getElementById("debth").textContent = formatter.format(debth);
