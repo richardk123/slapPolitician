@@ -33,6 +33,14 @@
                 height: 100%;
                 width: 0%;
             }
+            #debth
+            {
+                color: red;
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                font-weight: bold;
+            }
         </style>
         <script src="https://preview.babylonjs.com/ammo.js"></script>
         <script src="https://cdn.babylonjs.com/babylon.js"></script>
@@ -41,14 +49,21 @@
     </head>
    <body>
     <canvas id="renderCanvas" touch-action="none"></canvas>
+    <div id="debth"></div>
     <div id="progressBar">
         <div id="status"></div>
     </div>
     <script>
 
+        let debth =  -2208636516783;
         const reloadTime = 30;
         let ballShootTime = reloadTime;
         let pauseShitTalk = false;
+
+        var formatter = new Intl.NumberFormat('cs-CZ', {
+            style: 'currency',
+            currency: 'CZK',
+        });
 
         setInterval(() =>
         {
@@ -57,6 +72,7 @@
                 ballShootTime++;
             }
             document.getElementById("status").style.width = (ballShootTime / reloadTime) * 100 + "%";
+            document.getElementById("debth").textContent = formatter.format(debth);
         }, 100);
 
         function canShootBall()
@@ -82,6 +98,7 @@
         {
             const randIndex = Math.floor(Math.random() * sounds.length);
             sounds[randIndex].play();
+            console.log("iq");
         }
 
         function loadShitTalk(files, scene)
@@ -287,21 +304,30 @@
 
                 // load sounds
                 const shitTalk = loadShitTalk(["do zahrad.mp3", "plna zodpovednost.mp3", "prijmy.mp3", "program.mp3"], scene);
-                const offensiveTalk = loadOffensiveTalk(["iq.mp3"], scene);
+                const offensiveTalk = loadOffensiveTalk(["iq.mp3", "zkorumpovana pakaz.mp3", "takova drzost.mp3", "neuveritelny.mp3", "soucast kampane.mp3"], scene);
 
-                // register callback
+                // register collision callback
+                let collision = false;
                 head.physicsImpostor.registerOnPhysicsCollide(ball.physicsImpostor, () => 
                 {
-                    shitTalk.forEach(talk => talk.stop());
-                    pauseShitTalk = true;
-                    playRandomSound(offensiveTalk);
+                    // check only first collision
+                    if (!collision)
+                    {
+                        shitTalk.forEach(talk => talk.stop());
+                        offensiveTalk.forEach(talk => talk.stop());
+                        pauseShitTalk = true;
+                        playRandomSound(offensiveTalk);
+                        debth++;
+                    }
+                    collision = true;
 
                     setTimeout(() =>
                     {
                         pauseShitTalk = false;
+                        offensiveTalk.forEach(talk => talk.stop());
+                        collision = false;
                     }, 2000);
                 });
-
 
                 // render spring and do a friction
                 scene.onBeforeRenderObservable.add(() =>
@@ -349,7 +375,7 @@
                         ball.physicsImpostor.applyForce(new BABYLON.Vector3(0, -4, 0), head.getAbsolutePosition());
 
                         // spring friction
-                        let reducedVelocity = head.physicsImpostor.getAngularVelocity().scale(.97);
+                        let reducedVelocity = head.physicsImpostor.getAngularVelocity().scale(.99);
                         head.physicsImpostor.setAngularVelocity(reducedVelocity);
                     }
                 });
