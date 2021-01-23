@@ -149,14 +149,13 @@
             await Ammo();
             
             scene.clearColor = new BABYLON.Color3(0, 0, 0);
-            scene.debugLayer.show(); // debug
-            scene.shadowsEnabled = true;
+            // scene.debugLayer.show(); // debug
             scene.enablePhysics(new BABYLON.Vector3(0, 0, 0), new BABYLON.AmmoJSPlugin()); // gravity up
 
             // camera
             const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2, 3, new BABYLON.Vector3(0, 2, 0));
             camera.setPosition(new BABYLON.Vector3(0, 3, 7));
-            camera.attachControl(canvas, true);  // rotate with mouse down
+            // camera.attachControl(canvas, true);  // rotate with mouse down
 
             // light
             const light = new BABYLON.SpotLight("light", new BABYLON.Vector3(0, 5, 1), new BABYLON.Vector3(0, -1, -0.4), Math.PI / 3, 5, scene);
@@ -212,7 +211,7 @@
 
             var musicBox = null;
             // music box
-            BABYLON.SceneLoader.ImportMesh("", "./assets/", "musicbox.glb", scene, function (meshes) 
+            BABYLON.SceneLoader.ImportMesh("", "./assets/", "musicbox2.glb", scene, function (meshes) 
             {
                 // musicBox = BABYLON.Mesh.CreateBox("music box", 1, scene);
                 musicBox = meshes[0];
@@ -262,7 +261,7 @@
                     shitTalk.forEach(talk => talk.stop());
                     pauseShitTalk = true;
                     playRandomSound(offensiveTalk);
-                    
+
                     setTimeout(() =>
                     {
                         pauseShitTalk = false;
