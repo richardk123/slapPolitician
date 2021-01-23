@@ -16,18 +16,6 @@
                 height: 100%;
                 touch-action: none;
             }
-            #fps {
-                position: absolute;
-                background-color: black;
-                border: 2px solid red;
-                text-align: center;
-                font-size: 16px;
-                color: white;
-                top: 15px;
-                right: 10px;
-                width: 60px;
-                height: 20px;
-            }
         </style>
         <script src="https://preview.babylonjs.com/ammo.js"></script>
         <script src="https://cdn.babylonjs.com/babylon.js"></script>
@@ -37,74 +25,60 @@
    <body>
     <canvas id="renderCanvas" touch-action="none"></canvas>
     <script>
-        
-        function createPunchEffect(scene, position)
+
+        let pauseShitTalk = false;
+
+        function loadOffensiveTalk(files, scene)
         {
-            // Create a particle system
-            var particleSystem = new BABYLON.ParticleSystem("particles", 1000, scene);
+            let sounds = [];
+            files.forEach(file =>
+            {
+                var sound = new BABYLON.Sound(file, "./audio/" + file, scene, () => 
+                {
+                    sounds.push(sound);
+                });
+            });
 
-            //Texture of each particle
-            particleSystem.particleTexture = new BABYLON.Texture("textures/flare.png", scene);
+            return sounds;
+        }
 
-            // Where the particles come from
-            particleSystem.emitter = position; // the starting location
+        function playRandomSound(sounds)
+        {
+            const randIndex = Math.floor(Math.random() * sounds.length);
+            sounds[randIndex].play();
+        }
 
-            // Colors of all particles
-            particleSystem.color1 = new BABYLON.Color4(1, 1, 0, 0.83);
-            particleSystem.color2 = new BABYLON.Color4(1, .5, 0);
-            particleSystem.colorDead = new BABYLON.Color4(0, 0, 0.2, 0.0);
+        function loadShitTalk(files, scene)
+        {
+            let sounds = [];
+            files.forEach(file =>
+            {
+                var sound = new BABYLON.Sound(file, "./audio/" + file, scene, () => 
+                {
+                    sounds.push(sound);
+                });
+            });
 
-            // Size of each particle (random between...
-            particleSystem.minSize = 0.03;
-            particleSystem.maxSize = 0.05;
+            // play every 2 seconds random shit
+            setInterval(() => 
+            {
+                const playing = sounds.filter(s =>
+                {
+                    return s.isPlaying;
+                }).length > 0;
 
-            // Life time of each particle (random between...
-            particleSystem.minLifeTime = 0.005;
-            particleSystem.maxLifeTime = 0.01;
+                const ready = sounds.filter(s =>
+                {
+                    return s.isReady();
+                }).length > 0;
 
-            // Emission rate
-            particleSystem.emitRate = 1000;
-
-            /******* Emission Space ********/
-            particleSystem.createCylinderEmitter(0.2,0.2,1,1);
-
-            let pos = BABYLON.Vector3.Zero();
-            let count = 0
-            var radius = 0.1;
-
-            function rand() {
-                var rndAngle = (Math.PI / 9) * count;
-                var randX = radius * Math.sin(rndAngle);
-                var randY = 0;
-                var randZ = radius * Math.cos(rndAngle);
-                count++
-                if (count >= 18) {
-                    count = 0
+                if (!playing && ready && !pauseShitTalk)
+                {
+                    playRandomSound(sounds);
                 }
-                return [randX, randY, randZ];
-            }
-            particleSystem.startDirectionFunction = function(worldMatrix, directionToUpdate)
-            {
-                let r = rand();
-                pos.set(r[0], r[1], r[2]);
-                BABYLON.Vector3.TransformCoordinatesFromFloatsToRef(pos.x,pos.y,pos.z, worldMatrix, directionToUpdate);
-            }
+            }, 2000);
 
-            // Custom function to get the circle effect
-            particleSystem.startPositionFunction = function(worldMatrix, positionToUpdate)
-            {
-                BABYLON.Vector3.TransformCoordinatesFromFloatsToRef(pos.x, pos.y, pos.z, worldMatrix, position);
-            }
-
-            // Speed
-            particleSystem.minEmitPower = 1;
-            particleSystem.maxEmitPower = 2;
-            particleSystem.updateSpeed = 0.005;
-
-            // Start the particle system
-            particleSystem.start();
-
-            particleSystem.targetStopDuration = 0.02;
+            return sounds;
         }
 
         function createSpringPath(point1, point2, point2Default, scene, springRadius, springSteps)
@@ -238,20 +212,24 @@
 
             var musicBox = null;
             // music box
+            BABYLON.SceneLoader.ImportMesh("", "./assets/", "musicbox.glb", scene, function (meshes) 
             {
-                musicBox = BABYLON.Mesh.CreateBox("music box", 1, scene);
-                musicBox.position = new BABYLON.Vector3(0, 1.01, 0);
+                // musicBox = BABYLON.Mesh.CreateBox("music box", 1, scene);
+                musicBox = meshes[0];
+                musicBox.position = new BABYLON.Vector3(0, 1.1, 0);
+                musicBox.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
+                musicBox.rotation = new BABYLON.Vector3(0, -Math.PI / 3, 0);
                 musicBox.physicsImpostor = new BABYLON.PhysicsImpostor(musicBox, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9, friction: 0 }, scene);
                 shadowGenerator.getShadowMap().renderList.push(musicBox);
                 musicBox.receiveShadows = true;
-            }
+            });
 
             let head = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1.18, segments : 6}, scene);
             head.position = new BABYLON.Vector3(0, 2, 0);
             head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9, friction: 1 }, scene);
             shadowGenerator.getShadowMap().renderList.push(head);
             head.receiveShadows = true;
-            head.visibility  = 0.1;
+            head.visibility  = 0;
 
             let babis = null;
             // babis
@@ -271,13 +249,32 @@
                 let distanceJoint = new BABYLON.DistanceJoint({ maxDistance: -2, collision: false});
                 musicBox.physicsImpostor.addJoint(head.physicsImpostor, distanceJoint);
 
+                // first random movement
                 head.physicsImpostor.applyImpulse(new BABYLON.Vector3(Math.random(), Math.random(), Math.random()).scale(3), head.getAbsolutePosition());
+
+                // load sounds
+                const shitTalk = loadShitTalk(["do zahrad.mp3", "plna zodpovednost.mp3", "prijmy.mp3", "program.mp3"], scene);
+                const offensiveTalk = loadOffensiveTalk(["iq.mp3"], scene);
+
+                // register callback
+                head.physicsImpostor.registerOnPhysicsCollide(ball.physicsImpostor, () => 
+                {
+                    shitTalk.forEach(talk => talk.stop());
+                    pauseShitTalk = true;
+                    playRandomSound(offensiveTalk);
+                    
+                    setTimeout(() =>
+                    {
+                        pauseShitTalk = false;
+                    }, 2000);
+                });
+
 
                 // render spring and do a friction
                 scene.onBeforeRenderObservable.add(() =>
                 {
                     // hack to spring start at the bottom of h
-                    const half = head.getAbsolutePosition().subtract(musicBox.getAbsolutePosition()).normalize().scale(0.5);
+                    const half = head.getAbsolutePosition().subtract(musicBox.getAbsolutePosition()).normalize().scale(0.6);
                     const springTargetPosition = head.getAbsolutePosition().subtract(half);
 
                     const springPath = createSpringPath(musicBox.getAbsolutePosition(), springTargetPosition, new BABYLON.Vector3(0, 3.1, 0), scene, 0.1, 200);
@@ -291,14 +288,23 @@
                         springMesh = BABYLON.MeshBuilder.CreateTube("spring", 
                                                  {path: springPath.path, radius: 0.01, sideOrientation: BABYLON.Mesh.DOUBLESIDE, updatable: true, tessellation : 3}, 
                                                  scene);
-                        springMesh.collision = false;
                     }
 
-                    if (head && babis)
+                    // babis
+                    if (babis && head)
                     {
                         babis.position = springPath.path[springPath.path.length - 1];
-                        babis.rotation = springPath.lastDirection;
-                        // babis.lookAt(head.position);
+                        const lastDir = springPath.lastDirection;
+                        const perpendicularX = lastDir.cross(new BABYLON.Vector3(1, 0, 0));
+
+                        const lookAt = new BABYLON.Vector3(babis.position.x + perpendicularX.x, 
+                        babis.position.y + perpendicularX.y, 
+                        babis.position.z + perpendicularX.z);
+                        babis.lookAt(lookAt);
+
+                        // const test = BABYLON.MeshBuilder.CreateSphere(null, {diameter: 0.02, segments : 6}, scene);
+                        // test.position = lookAt;
+                        // babis.rotation = new BABYLON.Vector3(head.rotation.x, head.rotation.y + (Math.PI ), head.rotation.y);
                     }
                 });
 
@@ -346,12 +352,10 @@
                             ball.position.z = hitPoint.z + (normal.z * ballDistance);
                             ballMaterial.emissiveColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
                             
+                            // reset ball speed
                             ball.physicsImpostor.setLinearVelocity(new BABYLON.Vector3(0, 0, 0));
+                            // shoot the ball
                             ball.physicsImpostor.applyImpulse(punchForce.scale(0.5), ball.getAbsolutePosition());
-
-                            // head.physicsImpostor.applyImpulse(punchForce, head.getAbsolutePosition());
-
-                            // createPunchEffect(scene, hitPoint);
                         }
 
                         break;
