@@ -24,6 +24,7 @@
                 width: 200px;
                 height: 30px;
                 border: 1px solid darkgreen;
+                border-radius: 5px;
                 background-color: black;
                 transform: translate(-50%, -50%);
             }
@@ -270,7 +271,7 @@
                 musicBox = meshes[0];
                 musicBox.position = new BABYLON.Vector3(0, 1, 0);
                 musicBox.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
-                musicBox.rotation = new BABYLON.Vector3(0, -Math.PI / 3, 0);
+                musicBox.rotation = new BABYLON.Vector3(0, -Math.PI / 5, 0);
                 musicBox.physicsImpostor = new BABYLON.PhysicsImpostor(musicBox, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9, friction: 0 }, scene);
                 shadowGenerator.getShadowMap().renderList.push(meshes[1]);
 
@@ -311,7 +312,8 @@
 
                 // load sounds
                 const shitTalk = loadShitTalk(["do zahrad.mp3", "plna zodpovednost.mp3", "prijmy.mp3", "program.mp3"], scene);
-                const offensiveTalk = loadOffensiveTalk(["iq.mp3", "zkorumpovana pakaz.mp3", "takova drzost.mp3", "neuveritelny.mp3", "soucast kampane.mp3"], scene);
+                const offensiveTalk = loadOffensiveTalk(["iq.mp3", "zkorumpovana pakaz.mp3", 
+                "takova drzost.mp3", "neuveritelny.mp3", "soucast kampane.mp3", "proc.mp3", "nebudes me urazet.mp3"], scene);
 
                 // register collision callback
                 let collision = false;
@@ -382,7 +384,7 @@
                         ball.physicsImpostor.applyForce(new BABYLON.Vector3(0, -4, 0), head.getAbsolutePosition());
 
                         // spring friction
-                        let reducedVelocity = head.physicsImpostor.getAngularVelocity().scale(.99);
+                        let reducedVelocity = head.physicsImpostor.getAngularVelocity().scale(.995);
                         head.physicsImpostor.setAngularVelocity(reducedVelocity);
                     }
                 });
