@@ -16,6 +16,12 @@
                 height: 100%;
                 touch-action: none;
             }
+            
+            #progressBar {
+                position: absolute;
+                left: 50%;
+                bottom: 10px;
+            }
         </style>
         <script src="https://preview.babylonjs.com/ammo.js"></script>
         <script src="https://cdn.babylonjs.com/babylon.js"></script>
@@ -28,8 +34,6 @@
     <script>
 
         let pauseShitTalk = false;
-
-
 
         function loadOffensiveTalk(files, scene)
         {
@@ -146,10 +150,6 @@
         const createScene = async function () 
         {
             const scene = new BABYLON.Scene(engine);  
-            // scene.createDefaultEnvironment();
-            // scene.createDefaultSkybox();
-            // scene.createDefaultLight();
-
             await Ammo();
             
             scene.clearColor = new BABYLON.Color3(0, 0, 0);
@@ -203,30 +203,26 @@
 
             // ball
             const ball = BABYLON.MeshBuilder.CreateSphere("ball", {diameter: 0.2, segments : 6}, scene);
-
             shadowGenerator.getShadowMap().renderList.push(ball);
             ball.receiveShadows = true;
-            ball.isVisible = true;
-
             const ballMaterial = new BABYLON.StandardMaterial("ballMaterial", scene);
             ball.material = ballMaterial;
-
             ball.physicsImpostor = new BABYLON.PhysicsImpostor(ball, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 0.5, restitution: 0.9, friction: 0 }, scene);
-            ball.setEnabled(false);
 
-            var musicBox = null;
             // music box
+            var musicBox = null;
             BABYLON.SceneLoader.ImportMesh("", "./assets/", "musicbox2.glb", scene, function (meshes) 
             {
-                // musicBox = BABYLON.Mesh.CreateBox("music box", 1, scene);
+                // root
                 musicBox = meshes[0];
                 musicBox.position = new BABYLON.Vector3(0, 1, 0);
                 musicBox.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
                 musicBox.rotation = new BABYLON.Vector3(0, -Math.PI / 3, 0);
                 musicBox.physicsImpostor = new BABYLON.PhysicsImpostor(musicBox, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9, friction: 0 }, scene);
                 shadowGenerator.getShadowMap().renderList.push(meshes[1]);
+
+                // model
                 meshes[1].receiveShadows = true;
-                
                 meshes[1].material.ambientColor = new BABYLON.Color3(1, 1, 1);
             });
 
@@ -235,22 +231,24 @@
             head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.9, friction: 1 }, scene);
             head.visibility = 0.1;
 
-            let babis = null;
             // babis
+            let babis = null;
             BABYLON.SceneLoader.ImportMesh("", "./assets/", "babis.glb", scene, function (meshes) 
             {
+                // root
                 babis = meshes[0];
                 babis.scaling = new BABYLON.Vector3(0.6, 0.6, 0.6);
                 shadowGenerator.getShadowMap().renderList.push(meshes[1]);
-                // meshes[1].receiveShadows = true;
 
+                // model
                 meshes[1].material.ambientColor = new BABYLON.Color3(0.3, 0.3, 0.3);
             });
 
-            let springMesh = null;
             // on scene ready
             scene.executeWhenReady(() =>
             {
+                let springMesh = null;
+                
                 // create spring
                 let distanceJoint = new BABYLON.DistanceJoint({ maxDistance: -2, collision: false});
                 musicBox.physicsImpostor.addJoint(head.physicsImpostor, distanceJoint);
@@ -348,7 +346,6 @@
 
                             const ballDistance = 1.5;
                             
-                            ball.setEnabled(true);
                             ball.position.x = hitPoint.x + (normal.x * ballDistance);
                             ball.position.y = hitPoint.y + (normal.y * ballDistance);
                             ball.position.z = hitPoint.z + (normal.z * ballDistance);
