@@ -377,6 +377,9 @@
 
             // babis
             let babis = null;
+            let babisModel = null;
+            var babisEvilTexture = new BABYLON.Texture("textures/babisEvilTexture.jpg", scene);
+            var babisTexture = new BABYLON.Texture("textures/babisTexture.png", scene);
             let halo = BABYLON.Mesh.CreateTorus("halo", 0.7, 0.02, 24, scene);
             BABYLON.SceneLoader.ImportMesh("", "./assets/", "babis.glb", scene, function (meshes) 
             {
@@ -396,6 +399,12 @@
                 // horns
                 meshes[1].addChild(horns);
                 horns.position.y = 1.8;
+
+                babisModel = meshes[1];
+                babisModel.material.dispose();
+                babisModel.material = new BABYLON.StandardMaterial("texture1", scene);
+                babisModel.material.ambientColor = new BABYLON.Color3(0.7, 0.7, 0.7);
+                babisModel.material.ambientTexture = babisTexture;
             });
 
             // on scene ready
@@ -428,16 +437,23 @@
                         previousOffensiveTalkIndex = playRandomSound(offensiveTalk, previousOffensiveTalkIndex);
                     }
                     collision = true;
+
+                    babisModel.material.ambientTexture = babisEvilTexture;
                     halo.visibility = 0;
                     horns.visibility = 1;
+
                     decrementDebth();
 
                     setTimeout(() =>
                     {
                         halo.visibility = 1;
                         horns.visibility = 0;
+
                         pauseShitTalk = false;
                         offensiveTalk.forEach(talk => talk.stop());
+
+                        babisModel.material.ambientTexture = babisTexture;
+
                         collision = false;
                     }, 2000);
                 });
