@@ -306,7 +306,7 @@
                 // meshes[1].material.ambientColor = new BABYLON.Color3(1, 1, 1);
             });
 
-            let head = BABYLON.MeshBuilder.CreateSphere("babisCollision", {diameter: 1.38, segments : 18}, scene);
+            let head = BABYLON.MeshBuilder.CreateSphere("babisCollision", {diameter: 1.38, segments : 24}, scene);
             head.position = new BABYLON.Vector3(0, 0.1, 0);
             head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9, friction: 0.9 }, scene);
             const headMaterial = new BABYLON.StandardMaterial("headMaterial", scene);
