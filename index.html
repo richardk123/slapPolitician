@@ -544,6 +544,8 @@
                             
                             // reset ball speed
                             ball.physicsImpostor.setLinearVelocity(new BABYLON.Vector3(0, 0, 0));
+                            ball.physicsImpostor.setAngularVelocity(new BABYLON.Vector3(0, 0, 0));
+                            
                             // shoot the ball
                             ball.physicsImpostor.applyImpulse(punchForce.scale(0.5), ball.getAbsolutePosition());
                         }
