@@ -360,11 +360,11 @@
                 // render spring and do a friction
                 scene.onBeforeRenderObservable.add(() =>
                 {
-                    // hack to spring start at the bottom of h
+                    // spring start at the bottom
                     const half = head.getAbsolutePosition().subtract(musicBox.getAbsolutePosition()).normalize().scale(0.6);
                     const springTargetPosition = head.getAbsolutePosition().subtract(half);
 
-                    const springPath = createSpringPath(musicBox.getAbsolutePosition(), springTargetPosition, new BABYLON.Vector3(0, 3.1, 0), scene, 0.1, 200);
+                    const springPath = createSpringPath(musicBox.getAbsolutePosition(), springTargetPosition, new BABYLON.Vector3(0, 3.1, 0), scene, 0.07, 250);
 
                     if (springMesh)
                     {
