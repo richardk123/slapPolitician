@@ -338,6 +338,22 @@
                 // meshes[1].material.ambientColor = new BABYLON.Color3(1, 1, 1);
             });
 
+            // horns
+            var horns = null;
+            BABYLON.SceneLoader.ImportMesh("", "./assets/", "horns.glb", scene, function (meshes) 
+            {
+                // root
+                horns = meshes[1];
+                horns.visibility = 0;
+                horns.position = new BABYLON.Vector3(0, 0, 0);
+                horns.scaling = new BABYLON.Vector3(0.08, 0.08, 0.08);
+                
+                // model
+                meshes[1].receiveShadows = true;
+                shadowGenerator.getShadowMap().renderList.push(meshes[1]);
+                meshes[1].material.emissiveColor = new BABYLON.Color3(1, 0, 0);
+            });
+
             let head = BABYLON.MeshBuilder.CreateSphere("babisCollision", {diameter: 1.38, segments : 24}, scene);
             head.position = new BABYLON.Vector3(0, 0.1, 0);
             head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9, friction: 0.9 }, scene);
@@ -348,6 +364,7 @@
 
             // babis
             let babis = null;
+            let halo = BABYLON.Mesh.CreateTorus("halo", 0.7, 0.02, 24, scene);
             BABYLON.SceneLoader.ImportMesh("", "./assets/", "babis.glb", scene, function (meshes) 
             {
                 // root
@@ -355,16 +372,17 @@
                 babis.scaling = new BABYLON.Vector3(0.6, 0.6, 0.6);
                 shadowGenerator.getShadowMap().renderList.push(meshes[1]);
 
-                // model
-                // meshes[1].material.ambientColor = new BABYLON.Color3(0.3, 0.3, 0.3);
-
-                let halo = BABYLON.Mesh.CreateTorus("halo", 0.7, 0.02, 24, scene);
+                // halo
                 meshes[1].addChild(halo);
                 halo.position.y = 2;
                 halo.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
                 const haloMaterial = new BABYLON.StandardMaterial("haloMaterial", scene);
                 haloMaterial.emissiveColor = new BABYLON.Color3(1, 1, 0);
                 halo.material = haloMaterial;
+
+                // horns
+                meshes[1].addChild(horns);
+                horns.position.y = 1.8;
             });
 
             // on scene ready
@@ -397,10 +415,14 @@
                         playRandomSound(offensiveTalk);
                     }
                     collision = true;
+                    halo.visibility = 0;
+                    horns.visibility = 1;
                     decrementDebth();
 
                     setTimeout(() =>
                     {
+                        halo.visibility = 1;
+                        horns.visibility = 0;
                         pauseShitTalk = false;
                         offensiveTalk.forEach(talk => talk.stop());
                         collision = false;
@@ -477,7 +499,7 @@
                             ballShootTime = 0;
 
                             const normal = pickInfo.pickedMesh.getFacetNormal(pickInfo.faceId);
-                            const slapForce = -7;
+                            const slapForce = -5;
                             const punchForce = new BABYLON.Vector3(normal.x * slapForce, normal.y * slapForce, normal.z * slapForce);
                             const hitPoint = pickInfo.pickedPoint;
 
