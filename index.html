@@ -285,7 +285,7 @@
             ball.receiveShadows = true;
             const ballMaterial = new BABYLON.StandardMaterial("ballMaterial", scene);
             ball.material = ballMaterial;
-            ball.physicsImpostor = new BABYLON.PhysicsImpostor(ball, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 0.5, restitution: 0.9, friction: 0 }, scene);
+            ball.physicsImpostor = new BABYLON.PhysicsImpostor(ball, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 0.2, restitution: 0.9, friction: 0.4 }, scene);
 
             // music box
             var musicBox = null;
@@ -308,7 +308,7 @@
 
             let head = BABYLON.MeshBuilder.CreateSphere("babisCollision", {diameter: 1.38, segments : 18}, scene);
             head.position = new BABYLON.Vector3(0, 0.1, 0);
-            head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9, friction: 1 }, scene);
+            head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9, friction: 0.9 }, scene);
             const headMaterial = new BABYLON.StandardMaterial("headMaterial", scene);
             headMaterial.diffuseColor  = new BABYLON.Color3(1, 1, 0);
             head.material = headMaterial;
@@ -334,8 +334,6 @@
                 haloMaterial.emissiveColor = new BABYLON.Color3(1, 1, 0);
                 halo.material = haloMaterial;
             });
-
-            light.parent = babis;
 
             // on scene ready
             scene.executeWhenReady(() =>
@@ -425,7 +423,7 @@
                         ball.physicsImpostor.applyForce(new BABYLON.Vector3(0, -4, 0), head.getAbsolutePosition());
 
                         // spring friction
-                        let reducedVelocity = head.physicsImpostor.getAngularVelocity().scale(.985);
+                        let reducedVelocity = head.physicsImpostor.getAngularVelocity().scale(.97);
                         head.physicsImpostor.setAngularVelocity(reducedVelocity);
                     }
                 });
