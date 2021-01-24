@@ -215,8 +215,12 @@
 
             // camera
             const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2, 3, new BABYLON.Vector3(0, 2, 0));
-            camera.setPosition(new BABYLON.Vector3(2, 3, 4));
+            camera.setPosition(new BABYLON.Vector3(2, 3, 6));
             camera.attachControl(canvas, true);  // rotate with mouse down
+            camera.lowerRadiusLimit = 6;
+            camera.upperRadiusLimit = 6;
+            camera.lowerBetaLimit = 0;
+            camera.upperBetaLimit = Math.PI / 2;
 
             // light
             const light = new BABYLON.SpotLight("light", new BABYLON.Vector3(0, 5, 0), new BABYLON.Vector3(0, -1, -0.2), Math.PI / 3, 5, scene);
@@ -283,7 +287,7 @@
             });
 
             let head = BABYLON.MeshBuilder.CreateSphere("babisCollision", {diameter: 1.38, segments : 18}, scene);
-            head.position = new BABYLON.Vector3(0, 0, 0);
+            head.position = new BABYLON.Vector3(0, 0.1, 0);
             head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9, friction: 1 }, scene);
             const headMaterial = new BABYLON.StandardMaterial("headMaterial", scene);
             headMaterial.diffuseColor  = new BABYLON.Color3(1, 1, 0);
