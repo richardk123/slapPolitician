@@ -100,8 +100,12 @@
     <div id="startBtn" onclick="startApp()">Start</div>
     <script>
 
-        let debth = -2208636516783;
         const reloadTime = 30;
+        const shitTalkSounds = ["do zahrad.mp3", "plna zodpovednost.mp3", "prijmy.mp3", "program.mp3", "kampan na syna.mp3", "muj agrofert.mp3", "nechame se vydat.mp3",
+            "ohledne olafu.mp3", "vlada s kscm a spd.mp3", "ohrozeni deti.mp3", "kauza.mp3", "brutalni kampan.mp3"];
+        const offensiveTalkSounds = ["iq.mp3", "zkorumpovana pakaz.mp3", "takova drzost.mp3", "neuveritelny.mp3", "soucast kampane.mp3", 
+            "proc.mp3", "nebudes me urazet.mp3", "nikdy neodstoupim.mp3"];
+        let debth = -2208636516783;
         let ballShootTime = reloadTime;
         let pauseShitTalk = false;
         let previousShitTalkIndex = null;
@@ -420,9 +424,8 @@
                 head.physicsImpostor.applyImpulse(new BABYLON.Vector3(Math.random(), Math.random(), Math.random()).scale(3), head.getAbsolutePosition());
 
                 // load sounds
-                const shitTalk = loadShitTalk(["do zahrad.mp3", "plna zodpovednost.mp3", "prijmy.mp3", "program.mp3"], scene);
-                const offensiveTalk = loadOffensiveTalk(["iq.mp3", "zkorumpovana pakaz.mp3", 
-                "takova drzost.mp3", "neuveritelny.mp3", "soucast kampane.mp3", "proc.mp3", "nebudes me urazet.mp3"], scene);
+                const shitTalk = loadShitTalk(shitTalkSounds, scene);
+                const offensiveTalk = loadOffensiveTalk(offensiveTalkSounds, scene);
 
                 // register collision callback
                 let collision = false;
