@@ -101,15 +101,16 @@
     <script>
 
         const reloadTime = 30;
+
         const shitTalkSounds = ["do zahrad.mp3", "plna zodpovednost.mp3", "prijmy.mp3", "program.mp3", "kampan na syna.mp3", "muj agrofert.mp3", "nechame se vydat.mp3",
             "ohledne olafu.mp3", "vlada s kscm a spd.mp3", "ohrozeni deti.mp3", "kauza.mp3", "brutalni kampan.mp3"];
+
         const offensiveTalkSounds = ["iq.mp3", "zkorumpovana pakaz.mp3", "takova drzost.mp3", "neuveritelny.mp3", "soucast kampane.mp3", 
             "proc.mp3", "nebudes me urazet.mp3", "nikdy neodstoupim.mp3"];
+        
         let debth = -2208636516783;
         let ballShootTime = reloadTime;
         let pauseShitTalk = false;
-        let previousShitTalkIndex = null;
-        let previousOffensiveTalkIndex = null;
 
         var formatter = new Intl.NumberFormat('cs-CZ', {
             style: 'currency',
@@ -131,10 +132,19 @@
             document.getElementById("debth").textContent = formatter.format(debth);
         }, 100);
 
+        function copyArray(array)
+        {
+            let arrayCopy = [];
+            for (i = 0; i < array.length; i++) {
+                arrayCopy[i] = array[i];
+            }
+
+            return arrayCopy;
+        }
+
         function decrementDebth()
         {
             debth++;
-            debthDecrement
 
             document.getElementById("debthDecrement").classList.toggle('fade');
 
@@ -163,21 +173,20 @@
             return sounds;
         }
 
-        function playRandomSound(sounds, previousIndex)
+        function playRandomSound(sounds, currentSounds)
         {
-            let randIndex = Math.floor(Math.random() * sounds.length);
-
-            if (previousIndex)
+            if (currentSounds.length === 0)
             {
-                while (randIndex === previousIndex)
-                {
-                    randIndex = Math.floor(Math.random() * sounds.length);
-                }
+                currentSounds = copyArray(sounds);
             }
 
-            sounds[randIndex].play();
+            let randIndex = Math.floor(Math.random() * currentSounds.length);
 
-            return randIndex;
+            currentSounds[randIndex].play();
+            currentSounds.splice(randIndex, 1);
+            console.log(currentSounds.length);
+
+            return currentSounds;
         }
 
         function loadShitTalk(files, scene)
@@ -190,6 +199,7 @@
                     sounds.push(sound);
                 });
             });
+            let currentSounds = [];
 
             // play every 2 seconds random shit
             setInterval(() => 
@@ -206,7 +216,7 @@
 
                 if (!playing && ready && !pauseShitTalk)
                 {
-                    previousShitTalkIndex = playRandomSound(sounds, previousShitTalkIndex);
+                    currentSounds = playRandomSound(sounds, currentSounds);
                 }
             }, 2000);
 
@@ -425,7 +435,8 @@
 
                 // load sounds
                 const shitTalk = loadShitTalk(shitTalkSounds, scene);
-                const offensiveTalk = loadOffensiveTalk(offensiveTalkSounds, scene);
+                const offensiveTalks = loadOffensiveTalk(offensiveTalkSounds, scene);
+                let currentOffensiveTalks = [];
 
                 // register collision callback
                 let collision = false;
@@ -435,9 +446,9 @@
                     if (!collision)
                     {
                         shitTalk.forEach(talk => talk.stop());
-                        offensiveTalk.forEach(talk => talk.stop());
+                        offensiveTalks.forEach(talk => talk.stop());
                         pauseShitTalk = true;
-                        previousOffensiveTalkIndex = playRandomSound(offensiveTalk, previousOffensiveTalkIndex);
+                        currentOffensiveTalks = playRandomSound(offensiveTalks, currentOffensiveTalks);
                     }
                     collision = true;
 
@@ -453,7 +464,7 @@
                         horns.visibility = 0;
 
                         pauseShitTalk = false;
-                        offensiveTalk.forEach(talk => talk.stop());
+                        offensiveTalks.forEach(talk => talk.stop());
 
                         babisModel.material.ambientTexture = babisTexture;
 
@@ -531,7 +542,7 @@
                             ballShootTime = 0;
 
                             const normal = pickInfo.pickedMesh.getFacetNormal(pickInfo.faceId);
-                            const slapForce = -5;
+                            const slapForce = -7;
                             const punchForce = new BABYLON.Vector3(normal.x * slapForce, normal.y * slapForce, normal.z * slapForce);
                             const hitPoint = pickInfo.pickedPoint;
 
@@ -545,7 +556,7 @@
                             // reset ball speed
                             ball.physicsImpostor.setLinearVelocity(new BABYLON.Vector3(0, 0, 0));
                             ball.physicsImpostor.setAngularVelocity(new BABYLON.Vector3(0, 0, 0));
-                            
+
                             // shoot the ball
                             ball.physicsImpostor.applyImpulse(punchForce.scale(0.5), ball.getAbsolutePosition());
                         }
