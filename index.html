@@ -104,6 +104,8 @@
         const reloadTime = 30;
         let ballShootTime = reloadTime;
         let pauseShitTalk = false;
+        let previousShitTalkIndex = null;
+        let previousOffensiveTalkIndex = null;
 
         var formatter = new Intl.NumberFormat('cs-CZ', {
             style: 'currency',
@@ -157,10 +159,21 @@
             return sounds;
         }
 
-        function playRandomSound(sounds)
+        function playRandomSound(sounds, previousIndex)
         {
-            const randIndex = Math.floor(Math.random() * sounds.length);
+            let randIndex = Math.floor(Math.random() * sounds.length);
+
+            if (previousIndex)
+            {
+                while (randIndex === previousIndex)
+                {
+                    randIndex = Math.floor(Math.random() * sounds.length);
+                }
+            }
+
             sounds[randIndex].play();
+
+            return randIndex;
         }
 
         function loadShitTalk(files, scene)
@@ -189,7 +202,7 @@
 
                 if (!playing && ready && !pauseShitTalk)
                 {
-                    playRandomSound(sounds);
+                    previousShitTalkIndex = playRandomSound(sounds, previousShitTalkIndex);
                 }
             }, 2000);
 
@@ -412,7 +425,7 @@
                         shitTalk.forEach(talk => talk.stop());
                         offensiveTalk.forEach(talk => talk.stop());
                         pauseShitTalk = true;
-                        playRandomSound(offensiveTalk);
+                        previousOffensiveTalkIndex = playRandomSound(offensiveTalk, previousOffensiveTalkIndex);
                     }
                     collision = true;
                     halo.visibility = 0;
