@@ -45,6 +45,7 @@
                 top: 20px;
                 right: 20px;
                 font-weight: bold;
+                font-size: 32px;
             }
         </style>
         <script src="https://preview.babylonjs.com/ammo.js"></script>
@@ -276,11 +277,13 @@
                 // model
                 meshes[1].receiveShadows = true;
                 shadowGenerator.getShadowMap().renderList.push(meshes[1]);
+                meshes[2].receiveShadows = true;
+                shadowGenerator.getShadowMap().renderList.push(meshes[2]);
                 // meshes[1].material.ambientColor = new BABYLON.Color3(1, 1, 1);
             });
 
             let head = BABYLON.MeshBuilder.CreateSphere("babisCollision", {diameter: 1.38, segments : 18}, scene);
-            head.position = new BABYLON.Vector3(0, 2, 0);
+            head.position = new BABYLON.Vector3(0, 0, 0);
             head.physicsImpostor = new BABYLON.PhysicsImpostor(head, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9, friction: 1 }, scene);
             const headMaterial = new BABYLON.StandardMaterial("headMaterial", scene);
             headMaterial.diffuseColor  = new BABYLON.Color3(1, 1, 0);
@@ -316,7 +319,7 @@
                 let springMesh = null;
 
                 // create spring
-                let distanceJoint = new BABYLON.DistanceJoint({ maxDistance: -2, collision: false});
+                let distanceJoint = new BABYLON.DistanceJoint({ maxDistance: -2.5, collision: false});
                 musicBox.physicsImpostor.addJoint(head.physicsImpostor, distanceJoint);
 
                 // first random movement
