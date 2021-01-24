@@ -229,6 +229,10 @@
 
             // glow
             var gl = new BABYLON.GlowLayer("glow", scene);
+            gl.intensity = 12;
+
+            var hdrTexture = new BABYLON.CubeTexture.CreateFromPrefilteredData("assets/environment.env", scene);
+            scene.environmentTexture = hdrTexture;
 
             // shadows
             let shadowGenerator = new BABYLON.ShadowGenerator(512, light);
@@ -251,7 +255,7 @@
             }
 
             // ball
-            const ball = BABYLON.MeshBuilder.CreateSphere("ball", {diameter: 0.2, segments : 6}, scene);
+            const ball = BABYLON.MeshBuilder.CreateSphere("ball", {diameter: 0.1, segments : 6}, scene);
             shadowGenerator.getShadowMap().renderList.push(ball);
             ball.receiveShadows = true;
             const ballMaterial = new BABYLON.StandardMaterial("ballMaterial", scene);
@@ -260,19 +264,19 @@
 
             // music box
             var musicBox = null;
-            BABYLON.SceneLoader.ImportMesh("", "./assets/", "musicbox2.glb", scene, function (meshes) 
+            BABYLON.SceneLoader.ImportMesh("", "./assets/", "crate.glb", scene, function (meshes) 
             {
                 // root
                 musicBox = meshes[0];
-                musicBox.position = new BABYLON.Vector3(0, 1, 0);
-                musicBox.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
+                musicBox.position = new BABYLON.Vector3(0, 0.5, 0);
+                musicBox.scaling = new BABYLON.Vector3(0.4, 0.4, 0.4);
                 musicBox.rotation = new BABYLON.Vector3(0, -Math.PI / 5, 0);
                 musicBox.physicsImpostor = new BABYLON.PhysicsImpostor(musicBox, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9, friction: 0 }, scene);
-                shadowGenerator.getShadowMap().renderList.push(meshes[1]);
-
+                
                 // model
                 meshes[1].receiveShadows = true;
-                meshes[1].material.ambientColor = new BABYLON.Color3(1, 1, 1);
+                shadowGenerator.getShadowMap().renderList.push(meshes[1]);
+                // meshes[1].material.ambientColor = new BABYLON.Color3(1, 1, 1);
             });
 
             let head = BABYLON.MeshBuilder.CreateSphere("babisCollision", {diameter: 1.38, segments : 18}, scene);
@@ -281,7 +285,7 @@
             const headMaterial = new BABYLON.StandardMaterial("headMaterial", scene);
             headMaterial.diffuseColor  = new BABYLON.Color3(1, 1, 0);
             head.material = headMaterial;
-            head.visibility = 0.15;
+            head.visibility = 0;
 
             // babis
             let babis = null;
@@ -293,9 +297,9 @@
                 shadowGenerator.getShadowMap().renderList.push(meshes[1]);
 
                 // model
-                meshes[1].material.ambientColor = new BABYLON.Color3(0.3, 0.3, 0.3);
+                // meshes[1].material.ambientColor = new BABYLON.Color3(0.3, 0.3, 0.3);
 
-                let halo = BABYLON.Mesh.CreateTorus("halo", 0.7, 0.05, 24, scene);
+                let halo = BABYLON.Mesh.CreateTorus("halo", 0.7, 0.02, 24, scene);
                 meshes[1].addChild(halo);
                 halo.position.y = 2;
                 halo.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0);
