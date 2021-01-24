@@ -45,6 +45,7 @@
                 vertical-align: middle;
                 line-height: 70px;
                 font-size: 32px;
+                text-shadow: 2px 2px black;
             }
             #status
             {
@@ -55,6 +56,7 @@
                 text-align: center;
                 vertical-align: middle;
                 line-height: 30px;
+                text-shadow: 2px 2px black;
             }
             #debth
             {
@@ -65,6 +67,22 @@
                 font-weight: bold;
                 font-size: 32px;
                 display: none;
+                text-shadow: 2px 2px black;
+            }
+            #debthDecrement.fade
+            {
+                opacity: 1;
+            }
+            #debthDecrement
+            {
+                color: green;
+                position: fixed;
+                font-weight: bold;
+                font-size: 32px;
+                top: 50px;
+                right: 20px;
+                opacity: 0;
+                transition: opacity 1s; 
             }
         </style>
         <script src="https://preview.babylonjs.com/ammo.js"></script>
@@ -75,13 +93,14 @@
    <body>
     <canvas id="renderCanvas" touch-action="none"></canvas>
     <div id="debth"></div>
+    <div id="debthDecrement">+1,00 Kč</div>
     <div id="progressBar">
         <div id="status"></div>
     </div>
     <div id="startBtn" onclick="startApp()">Start</div>
     <script>
 
-        let debth =  -2208636516783;
+        let debth = -2208636516783;
         const reloadTime = 30;
         let ballShootTime = reloadTime;
         let pauseShitTalk = false;
@@ -105,6 +124,19 @@
             document.getElementById("status").style.width = (ballShootTime / reloadTime) * 100 + "%";
             document.getElementById("debth").textContent = formatter.format(debth);
         }, 100);
+
+        function decrementDebth()
+        {
+            debth++;
+            debthDecrement
+
+            document.getElementById("debthDecrement").classList.toggle('fade');
+
+            setTimeout(() =>
+            {
+                document.getElementById("debthDecrement").classList.toggle('fade');
+            }, 1000);
+        }
 
         function canShootBall()
         {
@@ -363,9 +395,9 @@
                         offensiveTalk.forEach(talk => talk.stop());
                         pauseShitTalk = true;
                         playRandomSound(offensiveTalk);
-                        debth++;
                     }
                     collision = true;
+                    decrementDebth();
 
                     setTimeout(() =>
                     {
@@ -490,6 +522,7 @@
             document.getElementById("startBtn").style.display = "none";
             document.getElementById("progressBar").style.display = "block";
             document.getElementById("debth").style.display = "block";
+            document.getElementById("debthDecrement").style.display = "block";
             createScene().then(scene => {
                 engine.runRenderLoop(function () 
                 {
