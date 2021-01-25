@@ -84,6 +84,12 @@
                 opacity: 0;
                 transition: opacity 1s; 
             }
+
+            #debthDecrement img 
+            {
+                position: fixed;
+                right: 110px;
+            }
         </style>
         <script src="https://preview.babylonjs.com/ammo.js"></script>
         <script src="https://cdn.babylonjs.com/babylon.js"></script>
@@ -102,7 +108,7 @@
    <body>
     <canvas id="renderCanvas" touch-action="none"></canvas>
     <div id="debth"></div>
-    <div id="debthDecrement">+1,00 Kč</div>
+    <div id="debthDecrement"><span><img src="./textures/shilerka.png" height="170px"></span>+1,00 Kč</div>
     <div id="progressBar">
         <div id="status"></div>
     </div>
