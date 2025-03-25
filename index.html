@@ -95,8 +95,8 @@
             }
         </style>
         <script src="https://preview.babylonjs.com/ammo.js"></script>
-        <script src="https://cdn.babylonjs.com/babylon.js"></script>
-        <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/babylonjs@5.1.0/babylon.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@5.1.0/babylonjs.loaders.min.js"></script>
         <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
         <!-- Global site tag (gtag.js) - Google Analytics -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-9DDSPTTFDB"></script>
@@ -118,13 +118,13 @@
     <div id="startBtn" onclick="startApp()">Start</div>
     <script>
 
-        const reloadTime = 30;
+        const reloadTime = 300;
 
         const shitTalkSounds = ["do zahrad.mp3", "plna zodpovednost.mp3", "prijmy.mp3", "program.mp3", "kampan na syna.mp3", "muj agrofert.mp3", "nechame se vydat.mp3",
             "ohledne olafu.mp3", "vlada s kscm a spd.mp3", "ohrozeni deti.mp3", "kauza.mp3", "brutalni kampan.mp3"];
 
         const offensiveTalkSounds = ["iq.mp3", "zkorumpovana pakaz.mp3", "takova drzost.mp3", "neuveritelny.mp3", "soucast kampane.mp3", 
-            "proc.mp3", "nebudes me urazet.mp3", "nikdy neodstoupim.mp3"];
+            "proc.mp3", "nebudes me urazet.mp3", "nikdy neodstoupim.mp3", "tenhle parazit.mp3", "vykladate.mp3", "zadny program.mp3"];
         
         let debth = -2208636516783;
         let ballShootTime = reloadTime;
@@ -148,7 +148,7 @@
             }
             document.getElementById("status").style.width = (ballShootTime / reloadTime) * 100 + "%";
             document.getElementById("debth").textContent = formatter.format(debth);
-        }, 100);
+        }, 1);
 
         function copyArray(array)
         {
@@ -202,7 +202,6 @@
 
             currentSounds[randIndex].play();
             currentSounds.splice(randIndex, 1);
-            console.log(currentSounds.length);
 
             return currentSounds;
         }
@@ -236,7 +235,7 @@
                 {
                     currentSounds = playRandomSound(sounds, currentSounds);
                 }
-            }, 2000);
+            }, 5000);
 
             return sounds;
         }
