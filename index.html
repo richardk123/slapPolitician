@@ -118,7 +118,7 @@
     <div id="startBtn" onclick="startApp()">Start</div>
     <script>
 
-        const reloadTime = 300;
+        const reloadTime = 400;
 
         const shitTalkSounds = ["do zahrad.mp3", "plna zodpovednost.mp3", "prijmy.mp3", "program.mp3", "kampan na syna.mp3", "muj agrofert.mp3", "nechame se vydat.mp3",
             "ohledne olafu.mp3", "vlada s kscm a spd.mp3", "ohrozeni deti.mp3", "kauza.mp3", "brutalni kampan.mp3"];
@@ -182,7 +182,7 @@
             let sounds = [];
             files.forEach(file =>
             {
-                var sound = new BABYLON.Sound(file, "./audio/" + file, scene, () => 
+                var sound = new BABYLON.Sound(file, "./audio/normalized/" + file, scene, () =>
                 {
                     sounds.push(sound);
                 });
@@ -211,7 +211,7 @@
             let sounds = [];
             files.forEach(file =>
             {
-                var sound = new BABYLON.Sound(file, "./audio/" + file, scene, () => 
+                var sound = new BABYLON.Sound(file, "./audio/normalized/" + file, scene, () =>
                 {
                     sounds.push(sound);
                 });
@@ -235,7 +235,7 @@
                 {
                     currentSounds = playRandomSound(sounds, currentSounds);
                 }
-            }, 5000);
+            }, 2000);
 
             return sounds;
         }
